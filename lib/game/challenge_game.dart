@@ -34,17 +34,30 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   ShapeSize _selectedShapeSize = ShapeSize.medium;
   ShapeSize get selectedShapeSize => _selectedShapeSize;
 
+  // Auto-spawn state
+  final Random _random = Random();
+  double _gameTime = 0;
+  double _timeSinceLastSpawn = 0;
+
+  /// Current spawn interval based on score (gets faster)
+  double get _currentSpawnInterval {
+    final decrease = _score * GameConstants.autoSpawnIntervalDecreasePerShape;
+    return (GameConstants.autoSpawnIntervalStart - decrease)
+        .clamp(GameConstants.autoSpawnIntervalMin, GameConstants.autoSpawnIntervalStart);
+  }
+
   // Callbacks
   void Function(double finalAngle, int score)? onGameOver;
   void Function(int score)? onScoreChanged;
   void Function(double angleDegrees)? onTiltChanged;
+  VoidCallback? onShapePlaced;
   final VoidCallback? onExit;
 
   void selectShapeSize(ShapeSize size) {
     _selectedShapeSize = size;
   }
 
-  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged})
+  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged, this.onShapePlaced})
       : super(
           gravity: GameConstants.gravity,
           zoom: GameConstants.zoom,
@@ -100,6 +113,18 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
 
     if (!_isReady || _gameState != GameState.playing) return;
 
+    // Update timers
+    _gameTime += dt;
+    _timeSinceLastSpawn += dt;
+
+    // Auto-spawn logic (after grace period)
+    if (_gameTime > GameConstants.autoSpawnStartDelay) {
+      if (_timeSinceLastSpawn >= _currentSpawnInterval) {
+        _spawnRandomShape();
+        _timeSinceLastSpawn = 0;
+      }
+    }
+
     // Check tilt angle (radians to degrees)
     final angleRadians = scaleBeam.body.angle;
     final angleDegrees = angleRadians * 180 / pi;
@@ -110,6 +135,24 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
     if (angleDegrees.abs() > GameConstants.tiltThreshold) {
       _triggerGameOver(angleDegrees);
     }
+  }
+
+  void _spawnRandomShape() {
+    // Random x position within beam bounds (with some margin)
+    final beamHalfWidth = GameConstants.beamWidth / 2 - 2;
+    final x = _random.nextDouble() * beamHalfWidth * 2 - beamHalfWidth;
+
+    // Spawn from top of screen
+    final y = -15.0;
+
+    // Random size
+    final sizes = ShapeSize.values;
+    final randomSize = sizes[_random.nextInt(sizes.length)];
+
+    world.add(SquareShape(
+      initialPosition: Vector2(x, y),
+      shapeSize: randomSize,
+    ));
   }
 
   void _triggerGameOver(double finalAngle) {
@@ -185,6 +228,7 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
       // Increment score
       _score++;
       onScoreChanged?.call(_score);
+      onShapePlaced?.call();
 
       // Remove ghost
       _ghostShape!.removeFromParent();

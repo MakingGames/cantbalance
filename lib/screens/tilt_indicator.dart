@@ -1,21 +1,21 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../game/constants.dart';
 import '../utils/colors.dart';
 
 class TiltIndicator extends StatelessWidget {
   final double angleDegrees;
+  final double threshold;
 
   const TiltIndicator({
     super.key,
     required this.angleDegrees,
+    this.threshold = 30.0,
   });
 
   /// Returns a color from green (safe) to yellow (warning) to red (danger)
   Color get _indicatorColor {
     final absAngle = angleDegrees.abs();
-    final threshold = GameConstants.tiltThreshold;
 
     // Percentage toward threshold (0 = level, 1 = at threshold)
     final danger = (absAngle / threshold).clamp(0.0, 1.0);

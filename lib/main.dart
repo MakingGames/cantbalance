@@ -137,6 +137,12 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
     _game = ChallengeGame(
       onGameOver: (angle, score) async {
         final isNew = await _highScoreService?.submitScore(score) ?? false;
+        // Haptic feedback for game over
+        if (isNew) {
+          HapticFeedback.heavyImpact();
+        } else {
+          HapticFeedback.mediumImpact();
+        }
         setState(() {
           _showGameOver = true;
           _finalAngle = angle;
@@ -158,6 +164,9 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
             });
           }
         });
+      },
+      onShapePlaced: () {
+        HapticFeedback.lightImpact();
       },
     );
   }
@@ -222,7 +231,9 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
                                 });
                               },
                               child: _showTiltIndicator
-                                  ? TiltIndicator(angleDegrees: _currentTilt)
+                                  ? TiltIndicator(
+                                      angleDegrees: _currentTilt,
+                                    )
                                   : Icon(
                                       Icons.radio_button_unchecked,
                                       color: GameColors.beam.withValues(alpha: 0.3),

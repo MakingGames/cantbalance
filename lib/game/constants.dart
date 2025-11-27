@@ -30,4 +30,10 @@ class GameConstants {
 
   // Tilt threshold (degrees)
   static const double tiltThreshold = 30.0;
+
+  // Auto-spawn settings (progressive difficulty)
+  static const double autoSpawnIntervalStart = 5.0; // seconds between spawns
+  static const double autoSpawnIntervalMin = 1.5; // minimum interval
+  static const double autoSpawnIntervalDecreasePerShape = 0.3; // faster each shape
+  static const double autoSpawnStartDelay = 3.0; // grace period before first spawn
 }
