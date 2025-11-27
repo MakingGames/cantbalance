@@ -10,6 +10,7 @@ import '../components/scale_beam.dart';
 import '../components/square_shape.dart';
 import '../components/walls.dart';
 import 'constants.dart';
+import 'game_level.dart';
 import 'shape_size.dart';
 
 enum GameState { playing, gameOver }
@@ -34,30 +35,64 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   ShapeSize _selectedShapeSize = ShapeSize.medium;
   ShapeSize get selectedShapeSize => _selectedShapeSize;
 
+  // Level tracking
+  GameLevel _currentLevel = GameLevel.basics;
+  GameLevel get currentLevel => _currentLevel;
+
   // Auto-spawn state
   final Random _random = Random();
   double _gameTime = 0;
   double _timeSinceLastSpawn = 0;
 
-  /// Current spawn interval based on score (gets faster)
+  /// Current spawn interval based on score (gets faster within auto-spawn levels)
   double get _currentSpawnInterval {
-    final decrease = _score * GameConstants.autoSpawnIntervalDecreasePerShape;
+    if (!_currentLevel.hasAutoSpawn) return double.infinity;
+    // Calculate shapes placed since auto-spawn started
+    final shapesInAutoSpawn = _score - GameLevel.autoSpawn.minScore;
+    final decrease = shapesInAutoSpawn * GameConstants.autoSpawnIntervalDecreasePerShape;
     return (GameConstants.autoSpawnIntervalStart - decrease)
         .clamp(GameConstants.autoSpawnIntervalMin, GameConstants.autoSpawnIntervalStart);
   }
 
+  /// Current Y gravity based on level (only increases in gravity+ levels)
+  double get _currentGravityY {
+    if (!_currentLevel.hasIncreasedGravity) return GameConstants.gravityStart;
+    // Calculate shapes placed since gravity started
+    final shapesInGravity = _score - GameLevel.gravity.minScore;
+    final increase = shapesInGravity * GameConstants.gravityIncreasePerShape;
+    return (GameConstants.gravityStart + increase)
+        .clamp(GameConstants.gravityStart, GameConstants.gravityMax);
+  }
+
+  // Track last tilt value for gravity updates
+  double _lastTiltX = 0;
+
   /// Update gravity based on phone tilt (accelerometer)
   void updateGravityFromTilt(double tiltX) {
-    // tiltX: negative = phone tilted left, positive = phone tilted right
-    // Scale the horizontal component based on tilt
-    final horizontalGravity = tiltX * GameConstants.tiltGravityMultiplier;
-    world.gravity = Vector2(horizontalGravity, GameConstants.gravity.y);
+    _lastTiltX = tiltX;
+    _updateGravity();
+  }
+
+  /// Recalculate gravity with current tilt and progressive Y component
+  void _updateGravity() {
+    final horizontalGravity = _lastTiltX * GameConstants.tiltGravityMultiplier;
+    world.gravity = Vector2(horizontalGravity, _currentGravityY);
+  }
+
+  /// Check if score crosses a level threshold
+  void _checkLevelChange() {
+    final newLevel = GameLevel.fromScore(_score);
+    if (newLevel != _currentLevel) {
+      _currentLevel = newLevel;
+      onLevelChanged?.call(newLevel);
+    }
   }
 
   // Callbacks
   void Function(double finalAngle, int score)? onGameOver;
   void Function(int score)? onScoreChanged;
   void Function(double angleDegrees)? onTiltChanged;
+  void Function(GameLevel level)? onLevelChanged;
   VoidCallback? onShapePlaced;
   final VoidCallback? onExit;
 
@@ -65,7 +100,7 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
     _selectedShapeSize = size;
   }
 
-  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged, this.onShapePlaced})
+  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged, this.onLevelChanged, this.onShapePlaced})
       : super(
           gravity: GameConstants.gravity,
           zoom: GameConstants.zoom,
@@ -125,8 +160,8 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
     _gameTime += dt;
     _timeSinceLastSpawn += dt;
 
-    // Auto-spawn logic (after grace period)
-    if (_gameTime > GameConstants.autoSpawnStartDelay) {
+    // Auto-spawn logic (only in levels with auto-spawn, after grace period)
+    if (_currentLevel.hasAutoSpawn && _gameTime > GameConstants.autoSpawnStartDelay) {
       if (_timeSinceLastSpawn >= _currentSpawnInterval) {
         _spawnRandomShape();
         _timeSinceLastSpawn = 0;
@@ -233,8 +268,10 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
         shapeSize: _selectedShapeSize,
       ));
 
-      // Increment score
+      // Increment score and check for level change
       _score++;
+      _checkLevelChange();
+      _updateGravity();
       onScoreChanged?.call(_score);
       onShapePlaced?.call();
 

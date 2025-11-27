@@ -39,4 +39,9 @@ class GameConstants {
 
   // Phone tilt settings
   static const double tiltGravityMultiplier = 1.5; // how much phone tilt affects gravity
+
+  // Progressive gravity settings
+  static const double gravityStart = 10.0; // starting Y gravity
+  static const double gravityMax = 18.0; // maximum Y gravity
+  static const double gravityIncreasePerShape = 0.5; // gravity increase per shape placed
 }
