@@ -12,7 +12,9 @@ import 'screens/main_menu.dart';
 import 'screens/game_over_overlay.dart';
 import 'screens/shape_picker.dart';
 import 'screens/tilt_indicator.dart';
+import 'screens/tutorial_overlay.dart';
 import 'services/high_score_service.dart';
+import 'services/tutorial_service.dart';
 import 'utils/colors.dart';
 
 void main() {
@@ -113,8 +115,10 @@ class ChallengeGameScreen extends StatefulWidget {
 class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
   late ChallengeGame _game;
   HighScoreService? _highScoreService;
+  TutorialService? _tutorialService;
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   bool _showGameOver = false;
+  bool _showTutorial = false;
   double _finalAngle = 0;
   int _score = 0;
   int _highScore = 0;
@@ -126,9 +130,18 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
   @override
   void initState() {
     super.initState();
-    _initHighScoreService();
+    _initServices();
     _createNewGame();
     _startAccelerometer();
+  }
+
+  Future<void> _initServices() async {
+    _highScoreService = await HighScoreService.getInstance();
+    _tutorialService = await TutorialService.getInstance();
+    setState(() {
+      _highScore = _highScoreService!.highScore;
+      _showTutorial = !_tutorialService!.hasSeenTutorial;
+    });
   }
 
   void _startAccelerometer() {
@@ -145,10 +158,10 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
     super.dispose();
   }
 
-  Future<void> _initHighScoreService() async {
-    _highScoreService = await HighScoreService.getInstance();
+  void _dismissTutorial() {
+    _tutorialService?.markTutorialSeen();
     setState(() {
-      _highScore = _highScoreService!.highScore;
+      _showTutorial = false;
     });
   }
 
@@ -296,6 +309,9 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
               onRestart: _restart,
               onMenu: () => Navigator.of(context).pop(),
             ),
+          // Tutorial overlay (first launch)
+          if (_showTutorial)
+            TutorialOverlay(onDismiss: _dismissTutorial),
         ],
       ),
     );
