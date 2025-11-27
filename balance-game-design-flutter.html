@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance — Game Design Document (Flutter)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111;
+            --surface-elevated: #1a1a1a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --accent: #54c5f8;
+            --accent-dim: #3d8db3;
+            --accent-secondary: #01579b;
+            --border: #222;
+            --code-bg: #0d0d0d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 40px 120px;
+        }
+
+        header {
+            margin-bottom: 80px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .flutter-badge {
+            display: inline-block;
+            background: var(--accent-secondary);
+            color: var(--accent);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 6px 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-weight: 400;
+            font-size: 4.5rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        h2 {
+            font-family: 'Instrument Serif', serif;
+            font-weight: 400;
+            font-size: 2rem;
+            margin-top: 80px;
+            margin-bottom: 24px;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-top: 48px;
+            margin-bottom: 16px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: var(--text-muted);
+        }
+
+        p strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .highlight {
+            background: var(--surface);
+            border-left: 2px solid var(--accent);
+            padding: 24px 32px;
+            margin: 32px 0;
+        }
+
+        .highlight p {
+            margin-bottom: 0;
+            color: var(--text);
+            font-style: italic;
+        }
+
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 12px;
+        }
+
+        li strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            background: var(--code-bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin: 32px 0;
+        }
+
+        .tech-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 8px;
+        }
+
+        .tech-card h4 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .tech-card .tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .tech-card p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        .decision-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+        }
+
+        .decision-table th,
+        .decision-table td {
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .decision-table th {
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .decision-table td {
+            color: var(--text-muted);
+        }
+
+        .decision-table tr:hover td {
+            background: var(--surface);
+        }
+
+        .milestone {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 32px;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .milestone::before {
+            content: attr(data-number);
+            position: absolute;
+            top: -12px;
+            left: 24px;
+            background: var(--accent);
+            color: var(--bg);
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.25rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .milestone h4 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .milestone p {
+            margin-bottom: 16px;
+        }
+
+        .milestone ul {
+            margin-bottom: 0;
+        }
+
+        .toc {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 8px;
+            margin: 40px 0;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .toc ol {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+            columns: 2;
+            column-gap: 32px;
+        }
+
+        .toc li {
+            margin-bottom: 8px;
+        }
+
+        .toc a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 60px 0;
+        }
+
+        .warning-box {
+            background: #1a1409;
+            border: 1px solid #3d3010;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+
+        .warning-box p {
+            color: #d4a855;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 40px 24px 80px;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+                margin-top: 60px;
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toc ol {
+                columns: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="flutter-badge">Flutter + Forge2D</span>
+            <h1>Balance</h1>
+            <p class="subtitle">A meditative stacking game about weight, tension, and letting go.</p>
+        </header>
+
+        <nav class="toc">
+            <h3>Contents</h3>
+            <ol>
+                <li><a href="#concept">Core Concept</a></li>
+                <li><a href="#mechanics">Game Mechanics</a></li>
+                <li><a href="#visual">Visual Design</a></li>
+                <li><a href="#audio">Audio Design</a></li>
+                <li><a href="#tech-stack">Technology Stack</a></li>
+                <li><a href="#physics">Physics Implementation</a></li>
+                <li><a href="#architecture">Code Architecture</a></li>
+                <li><a href="#milestones">Development Milestones</a></li>
+                <li><a href="#tuning">Tuning Parameters</a></li>
+                <li><a href="#prompts">CC Prompts</a></li>
+            </ol>
+        </nav>
+
+        <section id="concept">
+            <h2>Core Concept</h2>
+            <p>Balance is the anti-Tetris. Where Tetris demands speed and clearing, Balance asks for patience and accumulation. You place weighted shapes onto a balancing scale, building a precarious tower while keeping the scale from tipping past its breaking point.</p>
+            
+            <div class="highlight">
+                <p>There is no timer. The only pressure comes from the pile you've created. Every collapse is a decision you made three moves ago.</p>
+            </div>
+
+            <p>The game explores a specific emotional texture: not panic, but dread. You sit with a precarious system you created, knowing you have to add to it, knowing each addition brings you closer to collapse. The silence between moves is part of the experience.</p>
+
+            <h3>Why It Works</h3>
+            <ul>
+                <li><strong>One input.</strong> Horizontal position, then release. Anyone can understand it immediately.</li>
+                <li><strong>Emergent complexity.</strong> Simple rules create unique situations. No two sessions are alike.</li>
+                <li><strong>Self-generated pressure.</strong> The pile is the difficulty curve. You build your own challenge.</li>
+                <li><strong>No blame on randomness.</strong> You pick your shapes. You own your outcomes.</li>
+                <li><strong>Meditative but tense.</strong> No timer, but mounting stakes. You can breathe, but you can't relax.</li>
+                <li><strong>Natural shareability.</strong> Precarious towers are visually interesting. Screenshots happen naturally.</li>
+                <li><strong>Gentle loss.</strong> Collapse is an ending, not a punishment. The slow-motion fall gives closure.</li>
+            </ul>
+
+            <h3>Session Impermanence</h3>
+            <p>There is no save. There is no continue. When you close the app, the tower is gone. When you collapse, the tower is gone. Each session is complete in itself. You're not building toward anything persistent. You're just seeing how far this one goes.</p>
+            <p>This prevents sunk cost resentment. You're not losing something you were building over days. You're losing a few minutes of focus. That's recoverable. It also makes "quitting while ahead" a real choice.</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="mechanics">
+            <h2>Game Mechanics</h2>
+            
+            <h3>The Play Space</h3>
+            <p>A single horizontal beam, centered on a fulcrum. The beam tilts based on the weight distribution of everything resting on it. The tilt is continuous and physical—not snapping between states, but responding fluidly to where mass sits.</p>
+            <p>Above the scale, shapes descend one at a time. Below, nothing. The void is part of the aesthetic.</p>
+
+            <h3>Shapes and Weight</h3>
+            <p>Shapes vary in geometry and mass. Weight should be visually readable—heavier shapes are darker or larger. You should be able to glance at the scale and intuit where the mass is concentrated.</p>
+            
+            <table class="decision-table">
+                <thead>
+                    <tr>
+                        <th>Shape</th>
+                        <th>Weight</th>
+                        <th>Behavior</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Circle</strong></td>
+                        <td>Light</td>
+                        <td>Rolls slightly before settling, unpredictable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Square</strong></td>
+                        <td>Medium</td>
+                        <td>Stable, stackable, reliable</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rectangle</strong></td>
+                        <td>Medium-Heavy</td>
+                        <td>Orientation matters (tall vs flat)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Triangle</strong></td>
+                        <td>Light</td>
+                        <td>Only balances on base; can tip and cause chain reactions</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>The Selection Mechanic</h3>
+            <p>You always have three shape options to choose from. You pick which one to place next. The other two remain in the pool; a new third option appears after each placement.</p>
+            <p>This makes every collapse your fault. You chose. You placed. You live with it. The choice transforms the game from reaction to strategy.</p>
+
+            <h3>Placement</h3>
+            <p>You control horizontal position only. Drag to position, release to drop. Gravity and physics handle the rest. Shapes collide, settle, slide, stack. They do not lock into a grid. They behave like objects.</p>
+
+            <h3>The Tipping Point</h3>
+            <p>The scale has a threshold—approximately 30 degrees of tilt. Cross it and the game ends. But the approach is gradual. You can feel it getting precarious. A well-balanced pile can tolerate more weight. A lopsided pile is always one bad piece away.</p>
+
+            <h3>The Collapse</h3>
+            <p>When the scale tips past the threshold, time slows. The shapes tumble in slow motion. You witness what you built coming apart. No game over screen. No score flashing. Just the fall, then stillness, then a quiet option to begin again.</p>
+
+            <h3>The Peak Moment (Optional Feature)</h3>
+            <p>When you collapse, the game captures an image of your tower at its highest point—the frame before it started falling. A small gallery of your best runs, stored only for the current session. Not scores, just shapes. Visual history of structures that almost held.</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="visual">
+            <h2>Visual Design</h2>
+            
+            <h3>Aesthetic Direction</h3>
+            <p>Geometric minimalism with warmth. The visual language should feel precise but not sterile—think architectural sketches, not CAD drawings. Every element earns its place.</p>
+
+            <h3>Color Palette</h3>
+            <pre><code>// Dart color constants
+class GameColors {
+  static const background = Color(0xFF0A0A0A);    // near black
+  static const beam = Color(0xFFE8E8E8);          // warm white
+  static const fulcrum = Color(0xFFE8E8E8);       // warm white
+  static const shapeLight = Color(0xFF888888);    // circles, triangles
+  static const shapeMedium = Color(0xFF555555);   // squares
+  static const shapeHeavy = Color(0xFF333333);    // rectangles
+  static const accent = Color(0xFFC4A052);        // UI accent (muted gold)
+  static const danger = Color(0xFF8B4049);        // tilt warning
+}</code></pre>
+
+            <h3>Weight Visualization</h3>
+            <p>Heavier shapes are darker. This creates natural visual hierarchy—your eye is drawn to the heaviest pieces, which are also the most dangerous. Size scales slightly with weight as well, but darkness is the primary indicator.</p>
+
+            <h3>The Scale</h3>
+            <p>The beam should feel substantial—not a thin line, but a plank with implied thickness. The fulcrum is a simple triangle. The connection point should feel mechanical but elegant.</p>
+
+            <h3>Motion Principles</h3>
+            <ul>
+                <li><strong>Shape descent:</strong> Slow, deliberate. The player controls timing by releasing.</li>
+                <li><strong>Physics settling:</strong> Natural, with appropriate friction. Shapes shouldn't bounce forever.</li>
+                <li><strong>Scale tilt:</strong> Smooth, weighted response. Should feel like real mass shifting.</li>
+                <li><strong>Collapse sequence:</strong> Time dilates to 0.3x speed. Shapes fall gracefully.</li>
+            </ul>
+
+            <h3>Screen Composition</h3>
+            <p>The scale sits in the lower third of the screen. The upper area is where shapes appear and where the tower grows into. Generous negative space above and to the sides. The void matters.</p>
+            <p>Shape selection UI lives at the top—three shapes displayed simply, the selected one highlighted. Minimal chrome.</p>
+
+            <h3>Responsive Layout</h3>
+            <p>The game should work on any phone screen size. Use the device's aspect ratio to determine scale beam width—wider on tablets, proportionally narrower on phones. The physics world coordinates should be independent of screen pixels.</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="audio">
+            <h2>Audio Design</h2>
+
+            <h3>Philosophy</h3>
+            <p>Sound should be present but not intrusive. The silence between sounds is as important as the sounds themselves. Audio reinforces the meditative quality while building tension.</p>
+
+            <h3>Sound Events</h3>
+            <ul>
+                <li><strong>Shape selection:</strong> Soft click, pitched by weight (lighter = higher)</li>
+                <li><strong>Shape release:</strong> Subtle whoosh</li>
+                <li><strong>Shape landing:</strong> Soft thud, pitched by weight and impact force</li>
+                <li><strong>Shapes settling:</strong> Quiet scraping/sliding sounds</li>
+                <li><strong>Scale creaking:</strong> Low wooden creak as tilt increases, more urgent near threshold</li>
+                <li><strong>Collapse:</strong> Slow, reverberant tumbling. Almost musical in its chaos.</li>
+            </ul>
+
+            <h3>Implementation</h3>
+            <p>Use the <code>flame_audio</code> package for sound playback. Preload all sounds on app start. Trigger sounds from collision callbacks in Forge2D.</p>
+
+            <h3>No Music</h3>
+            <p>The game doesn't need a soundtrack. The ambient tension and sound design carry the experience. Players can add their own music if desired.</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="tech-stack">
+            <h2>Technology Stack</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <span class="tag">Framework</span>
+                    <h4>Flutter</h4>
+                    <p>Cross-platform UI framework. Single Dart codebase compiles to iOS and Android. Hot reload for fast iteration.</p>
+                </div>
+                <div class="tech-card">
+                    <span class="tag">Game Engine</span>
+                    <h4>Flame</h4>
+                    <p>Lightweight game engine for Flutter. Handles game loop, rendering, input, and integrates with Forge2D for physics.</p>
+                </div>
+                <div class="tech-card">
+                    <span class="tag">Physics</span>
+                    <h4>Forge2D</h4>
+                    <p>Dart port of Box2D. Rigid body physics, collision detection, joints/constraints. Well-documented, battle-tested.</p>
+                </div>
+                <div class="tech-card">
+                    <span class="tag">Audio</span>
+                    <h4>flame_audio</h4>
+                    <p>Audio package for Flame. Simple API for playing sounds, supports preloading and pooling.</p>
+                </div>
+            </div>
+
+            <h3>Key Packages</h3>
+            <pre><code>dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.18.0
+  flame_forge2d: ^0.18.0
+  flame_audio: ^2.10.0</code></pre>
+
+            <h3>Project Structure</h3>
+            <pre><code>balance/
+├── lib/
+│   ├── main.dart                 # App entry point
+│   ├── game/
+│   │   ├── balance_game.dart     # Main Flame game class
+│   │   ├── game_state.dart       # State management
+│   │   └── constants.dart        # Physics & visual constants
+│   ├── components/
+│   │   ├── scale_beam.dart       # The tilting beam
+│   │   ├── fulcrum.dart          # The pivot point
+│   │   ├── game_shape.dart       # Base shape class
+│   │   ├── circle_shape.dart     # Circle implementation
+│   │   ├── square_shape.dart     # Square implementation
+│   │   ├── rectangle_shape.dart  # Rectangle implementation
+│   │   ├── triangle_shape.dart   # Triangle implementation
+│   │   └── walls.dart            # Invisible boundaries
+│   ├── ui/
+│   │   ├── shape_selector.dart   # Three-shape selection UI
+│   │   ├── tilt_indicator.dart   # Danger level display
+│   │   └── restart_overlay.dart  # End state UI
+│   └── utils/
+│       ├── colors.dart           # Color constants
+│       └── audio_manager.dart    # Sound handling
+├── assets/
+│   └── audio/
+│       ├── click.mp3
+│       ├── drop.mp3
+│       ├── thud_light.mp3
+│       ├── thud_heavy.mp3
+│       └── creak.mp3
+└── pubspec.yaml</code></pre>
+
+            <h3>Development Setup</h3>
+            <p>CC will need Flutter SDK installed. For testing:</p>
+            <ul>
+                <li><strong>iOS:</strong> Xcode + iOS Simulator</li>
+                <li><strong>Android:</strong> Android Studio + Emulator or physical device</li>
+                <li><strong>Quick testing:</strong> <code>flutter run</code> with connected device/emulator</li>
+            </ul>
+
+            <div class="warning-box">
+                <p><strong>Note:</strong> Physics tuning is best done on a real device. Emulator performance can differ from actual hardware, especially for physics-heavy games.</p>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="physics">
+            <h2>Physics Implementation</h2>
+
+            <h3>Forge2D Core Concepts</h3>
+            <p>Forge2D (Box2D port) uses these primitives:</p>
+            <ul>
+                <li><strong>World:</strong> Contains all bodies, runs simulation</li>
+                <li><strong>Body:</strong> Physical object (dynamic, static, or kinematic)</li>
+                <li><strong>Fixture:</strong> Attaches a shape to a body, defines collision properties</li>
+                <li><strong>Joint:</strong> Connects bodies (we'll use RevoluteJoint for the pivot)</li>
+            </ul>
+
+            <h3>Coordinate System</h3>
+            <p>Forge2D uses meters, not pixels. Define a scale factor to convert between physics world and screen coordinates. Flame's Forge2D integration handles this, but be aware of it when setting sizes.</p>
+            <pre><code>// In Flame Forge2D, the default zoom is 10 (10 pixels = 1 meter)
+// Adjust in your Forge2DGame class:
+class BalanceGame extends Forge2DGame {
+  BalanceGame() : super(zoom: 20.0, gravity: Vector2(0, 10.0));
+}</code></pre>
+
+            <h3>The Scale Implementation</h3>
+            <pre><code>// scale_beam.dart
+class ScaleBeam extends BodyComponent {
+  final Vector2 size;
+  final Vector2 position;
+  
+  ScaleBeam({
+    required this.size,
+    required this.position,
+  });
+
+  @override
+  Body createBody() {
+    final bodyDef = BodyDef(
+      type: BodyType.dynamic,
+      position: position,
+    );
+    
+    final body = world.createBody(bodyDef);
+    
+    final shape = PolygonShape()
+      ..setAsBox(size.x / 2, size.y / 2, Vector2.zero(), 0);
+    
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.8
+      ..restitution = 0.1;
+    
+    body.createFixture(fixtureDef);
+    
+    return body;
+  }
+  
+  @override
+  void render(Canvas canvas) {
+    final rect = Rect.fromCenter(
+      center: Offset.zero,
+      width: size.x * zoom,
+      height: size.y * zoom,
+    );
+    canvas.drawRect(rect, Paint()..color = GameColors.beam);
+  }
+}</code></pre>
+
+            <h3>The Pivot Joint</h3>
+            <pre><code>// Creating the revolute joint (pivot)
+void createPivot(Body beam, Vector2 pivotPoint) {
+  // Create a static anchor body at the pivot point
+  final anchorDef = BodyDef(
+    type: BodyType.static,
+    position: pivotPoint,
+  );
+  final anchorBody = world.createBody(anchorDef);
+  
+  // Create revolute joint
+  final jointDef = RevoluteJointDef()
+    ..initialize(anchorBody, beam, pivotPoint)
+    ..enableLimit = false  // Allow full rotation for collapse
+    ..enableMotor = false;
+  
+  world.createJoint(RevoluteJoint(jointDef));
+}</code></pre>
+
+            <h3>Shape Creation</h3>
+            <pre><code>// game_shape.dart - Base class
+abstract class GameShape extends BodyComponent with ContactCallbacks {
+  final Vector2 initialPosition;
+  final double density;
+  final Color color;
+  
+  GameShape({
+    required this.initialPosition,
+    required this.density,
+    required this.color,
+  });
+  
+  @override
+  void beginContact(Object other, Contact contact) {
+    // Trigger landing sound based on impact velocity
+    final velocity = body.linearVelocity.length;
+    if (velocity > 2.0) {
+      AudioManager.playLanding(density, velocity);
+    }
+  }
+}
+
+// circle_shape.dart
+class CircleShape extends GameShape {
+  final double radius;
+  
+  CircleShape({
+    required Vector2 position,
+    this.radius = 1.25,
+  }) : super(
+    initialPosition: position,
+    density: 0.5,  // light
+    color: GameColors.shapeLight,
+  );
+  
+  @override
+  Body createBody() {
+    final bodyDef = BodyDef(
+      type: BodyType.dynamic,
+      position: initialPosition,
+    );
+    
+    final body = world.createBody(bodyDef);
+    
+    final shape = CircleShape()..radius = radius;
+    
+    final fixtureDef = FixtureDef(shape)
+      ..density = density
+      ..friction = 0.6
+      ..restitution = 0.15;
+    
+    body.createFixture(fixtureDef);
+    
+    return body;
+  }
+  
+  @override
+  void render(Canvas canvas) {
+    canvas.drawCircle(
+      Offset.zero,
+      radius * zoom,
+      Paint()..color = color,
+    );
+  }
+}
+
+// Similar implementations for SquareShape, RectangleShape, TriangleShape...</code></pre>
+
+            <h3>Tilt Detection</h3>
+            <pre><code>// In your game update loop
+void checkTilt() {
+  final angle = scaleBeam.body.angle;
+  final degrees = angle * (180 / pi);
+  final threshold = 30.0;
+  
+  // Update UI indicator
+  tiltIndicator.setLevel((degrees.abs() / threshold).clamp(0.0, 1.0));
+  
+  // Check for collapse
+  if (degrees.abs() > threshold) {
+    triggerCollapse();
+  }
+}
+
+void triggerCollapse() {
+  gameState = GameState.collapsing;
+  
+  // Capture screenshot before chaos
+  captureScreenshot();
+  
+  // Note: Forge2D doesn't have built-in slow-mo
+  // We'll handle this by scaling dt in the update loop
+  timeScale = 0.3;
+}</code></pre>
+
+            <h3>Slow Motion Implementation</h3>
+            <pre><code>// In your Forge2DGame class
+double timeScale = 1.0;
+
+@override
+void update(double dt) {
+  // Scale time for slow-motion effect
+  super.update(dt * timeScale);
+  
+  // Rest of update logic...
+}</code></pre>
+
+            <h3>Key Physics Parameters</h3>
+            <table class="decision-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Start Value</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>gravity</code></td>
+                        <td>Vector2(0, 10.0)</td>
+                        <td>Downward force (Box2D default is 10)</td>
+                    </tr>
+                    <tr>
+                        <td><code>friction</code></td>
+                        <td>0.6 - 0.8</td>
+                        <td>Surface grip between shapes</td>
+                    </tr>
+                    <tr>
+                        <td><code>restitution</code></td>
+                        <td>0.1 - 0.15</td>
+                        <td>Bounciness (low = settles quickly)</td>
+                    </tr>
+                    <tr>
+                        <td><code>density</code></td>
+                        <td>0.5 - 2.0</td>
+                        <td>Mass per area (affects torque on beam)</td>
+                    </tr>
+                    <tr>
+                        <td><code>linearDamping</code></td>
+                        <td>0.1</td>
+                        <td>Air resistance (prevents eternal motion)</td>
+                    </tr>
+                    <tr>
+                        <td><code>angularDamping</code></td>
+                        <td>0.1</td>
+                        <td>Rotational resistance</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="architecture">
+            <h2>Code Architecture</h2>
+
+            <h3>Game States</h3>
+            <pre><code>enum GameState {
+  selecting,   // Player choosing next shape
+  placing,     // Shape following finger, waiting for release
+  settling,    // Physics running, waiting for rest
+  collapsing,  // End sequence playing
+  ended,       // Showing restart option
+}</code></pre>
+
+            <h3>Main Game Class</h3>
+            <pre><code>class BalanceGame extends Forge2DGame with HasTappables, HasDraggables {
+  late ScaleBeam scaleBeam;
+  late Fulcrum fulcrum;
+  late ShapeSelector shapeSelector;
+  late TiltIndicator tiltIndicator;
+  
+  GameState gameState = GameState.selecting;
+  double timeScale = 1.0;
+  
+  GameShape? activeShape;
+  List<GameShape> placedShapes = [];
+  
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    
+    // Add world boundaries
+    add(Walls());
+    
+    // Add scale components
+    fulcrum = Fulcrum(position: screenToWorld(size / 2));
+    add(fulcrum);
+    
+    scaleBeam = ScaleBeam(
+      size: Vector2(30, 1),  // 30 meters wide, 1 meter tall
+      position: screenToWorld(size / 2),
+    );
+    add(scaleBeam);
+    
+    // Create pivot joint
+    createPivot(scaleBeam.body, fulcrum.position);
+    
+    // Add UI
+    shapeSelector = ShapeSelector(onSelect: handleShapeSelection);
+    add(shapeSelector);
+    
+    tiltIndicator = TiltIndicator();
+    add(tiltIndicator);
+  }
+  
+  @override
+  void update(double dt) {
+    super.update(dt * timeScale);
+    
+    switch (gameState) {
+      case GameState.selecting:
+        // Waiting for UI input
+        break;
+      case GameState.placing:
+        // Active shape follows input
+        break;
+      case GameState.settling:
+        if (allBodiesAtRest()) {
+          checkTilt();
+          if (gameState != GameState.collapsing) {
+            gameState = GameState.selecting;
+            shapeSelector.enable();
+          }
+        }
+        break;
+      case GameState.collapsing:
+        // Slow-mo plays out
+        break;
+      case GameState.ended:
+        // Waiting for restart
+        break;
+    }
+  }
+  
+  bool allBodiesAtRest() {
+    for (final shape in placedShapes) {
+      if (shape.body.linearVelocity.length > 0.1 ||
+          shape.body.angularVelocity.abs() > 0.1) {
+        return false;
+      }
+    }
+    return scaleBeam.body.angularVelocity.abs() < 0.05;
+  }
+}</code></pre>
+
+            <h3>Input Handling</h3>
+            <pre><code>// For placing shapes - drag to position, release to drop
+@override
+void onDragUpdate(DragUpdateInfo info) {
+  if (gameState == GameState.placing && activeShape != null) {
+    // Update horizontal position only
+    final worldPos = screenToWorld(info.eventPosition.global);
+    activeShape!.body.setTransform(
+      Vector2(worldPos.x, activeShape!.body.position.y),
+      0,
+    );
+  }
+}
+
+@override
+void onDragEnd(DragEndInfo info) {
+  if (gameState == GameState.placing && activeShape != null) {
+    releaseShape();
+  }
+}
+
+void releaseShape() {
+  // Enable physics on the shape
+  activeShape!.body.setType(BodyType.dynamic);
+  placedShapes.add(activeShape!);
+  activeShape = null;
+  gameState = GameState.settling;
+}</code></pre>
+
+            <h3>Shape Selection</h3>
+            <pre><code>class ShapeSelector extends PositionComponent with HasGameRef<BalanceGame> {
+  final Function(ShapeType) onSelect;
+  
+  List<ShapeType> pool = [];
+  bool enabled = true;
+  
+  ShapeSelector({required this.onSelect});
+  
+  @override
+  Future<void> onLoad() async {
+    // Initialize pool with random shapes
+    pool = [
+      ShapeType.random(),
+      ShapeType.random(),
+      ShapeType.random(),
+    ];
+    
+    // Create tap targets for each shape
+    for (int i = 0; i < 3; i++) {
+      add(ShapeButton(
+        index: i,
+        onTap: () => selectShape(i),
+      ));
+    }
+  }
+  
+  void selectShape(int index) {
+    if (!enabled) return;
+    
+    final selected = pool[index];
+    pool[index] = ShapeType.random();
+    
+    enabled = false;
+    onSelect(selected);
+  }
+}
+
+enum ShapeType {
+  circle,
+  square,
+  rectangle,
+  triangle;
+  
+  static ShapeType random() {
+    return values[Random().nextInt(values.length)];
+  }
+}</code></pre>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="milestones">
+            <h2>Development Milestones</h2>
+
+            <p>Each milestone should be fully playable before moving to the next. This validates the core feel early and prevents wasted work on features that don't serve the game.</p>
+
+            <div class="milestone" data-number="1">
+                <h4>The Tilting Scale</h4>
+                <p>A beam balanced on a pivot point. Tap anywhere to drop a square onto it. Watch the scale respond to weight distribution. No selection, no end state—just the physics.</p>
+                <ul>
+                    <li>Flutter project with Flame + Forge2D setup</li>
+                    <li>Beam body with revolute joint at center</li>
+                    <li>Tap to spawn squares that fall</li>
+                    <li>Scale tilts based on weight position</li>
+                    <li>Invisible walls to keep shapes on screen</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Dropping squares and watching the scale tip feels satisfying. The physics feel "right."</p>
+            </div>
+
+            <div class="milestone" data-number="2">
+                <h4>Placement Control</h4>
+                <p>Player controls where shapes drop. Drag to position horizontally, release to drop.</p>
+                <ul>
+                    <li>Shape spawns at top of screen on tap</li>
+                    <li>Drag moves shape horizontally (vertical position fixed)</li>
+                    <li>Visual indicator shows drop trajectory</li>
+                    <li>Release drops the shape</li>
+                    <li>Next shape spawns after settling</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Precise control over placement. Intentionality feels good.</p>
+            </div>
+
+            <div class="milestone" data-number="3">
+                <h4>Tilt Threshold and Collapse</h4>
+                <p>Game ends when scale tips past threshold. Slow-motion collapse sequence plays. Restart option appears.</p>
+                <ul>
+                    <li>Monitor beam angle each frame</li>
+                    <li>Threshold at 30 degrees</li>
+                    <li>Time scale reduces to 0.3 on collapse</li>
+                    <li>Restart overlay appears after delay</li>
+                    <li>Tap to restart clears all shapes, resets beam</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Collapse feels like an ending, not a punishment. Restart is frictionless.</p>
+            </div>
+
+            <div class="milestone" data-number="4">
+                <h4>Shape Variety</h4>
+                <p>All four shape types implemented with distinct weights and behaviors.</p>
+                <ul>
+                    <li>Circle (light, rolls)</li>
+                    <li>Square (medium, stable)</li>
+                    <li>Rectangle (heavy, orientation matters)</li>
+                    <li>Triangle (light, unstable)</li>
+                    <li>Visual weight indication via color</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Each shape feels different. Strategic considerations emerge.</p>
+            </div>
+
+            <div class="milestone" data-number="5">
+                <h4>Selection Mechanic</h4>
+                <p>Three-shape selection pool. Player chooses which shape to place next.</p>
+                <ul>
+                    <li>UI showing three shapes at top of screen</li>
+                    <li>Tap to select, selected shape becomes active</li>
+                    <li>Pool replenishes after placement</li>
+                    <li>Clear visual feedback on selection</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Choice feels meaningful. "I should have picked differently" moments occur.</p>
+            </div>
+
+            <div class="milestone" data-number="6">
+                <h4>Visual Polish</h4>
+                <p>Final aesthetic pass. Color palette, tilt warning indicator, layout refinement.</p>
+                <ul>
+                    <li>Finalized color scheme from design spec</li>
+                    <li>Tilt indicator (color shift as danger increases)</li>
+                    <li>Proper screen centering and scaling</li>
+                    <li>Fulcrum visual refinement</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Game looks intentional, not placeholder.</p>
+            </div>
+
+            <div class="milestone" data-number="7">
+                <h4>Audio</h4>
+                <p>Sound design implementation.</p>
+                <ul>
+                    <li>Landing sounds (pitched by weight)</li>
+                    <li>Selection tap sound</li>
+                    <li>Tilt creaking (optional ambient)</li>
+                    <li>Collapse audio sequence</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Sound enhances without overwhelming.</p>
+            </div>
+
+            <div class="milestone" data-number="8">
+                <h4>Peak Moment Gallery (Optional)</h4>
+                <p>Screenshot capture of best moments from current session.</p>
+                <ul>
+                    <li>Capture game canvas before collapse</li>
+                    <li>Store in memory (not persistent)</li>
+                    <li>Simple gallery view accessible from restart screen</li>
+                </ul>
+                <p><strong>Success criteria:</strong> Creates natural sharing moments.</p>
+            </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="tuning">
+            <h2>Tuning Parameters</h2>
+
+            <p>These are the values you'll iterate on most. When giving feedback to CC, reference these specifically.</p>
+
+            <h3>Physics Feel</h3>
+            <table class="decision-table">
+                <thead>
+                    <tr>
+                        <th>If it feels...</th>
+                        <th>Adjust...</th>
+                        <th>Direction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Too floaty/slow falling</td>
+                        <td>World gravity</td>
+                        <td>Increase Y value (try 15.0 or 20.0)</td>
+                    </tr>
+                    <tr>
+                        <td>Too bouncy</td>
+                        <td>restitution</td>
+                        <td>Decrease toward 0</td>
+                    </tr>
+                    <tr>
+                        <td>Shapes slide too much</td>
+                        <td>friction</td>
+                        <td>Increase toward 1.0</td>
+                    </tr>
+                    <tr>
+                        <td>Shapes jitter after settling</td>
+                        <td>linearDamping, velocityThreshold</td>
+                        <td>Increase damping, use sleep for stopped bodies</td>
+                    </tr>
+                    <tr>
+                        <td>Scale too sensitive</td>
+                        <td>Beam density or shape densities</td>
+                        <td>Increase beam density or decrease shape densities</td>
+                    </tr>
+                    <tr>
+                        <td>Scale too sluggish</td>
+                        <td>Beam density</td>
+                        <td>Decrease</td>
+                    </tr>
+                    <tr>
+                        <td>Collapse too fast</td>
+                        <td>timeScale during collapse</td>
+                        <td>Decrease (try 0.2)</td>
+                    </tr>
+                    <tr>
+                        <td>Game too easy</td>
+                        <td>Tilt threshold</td>
+                        <td>Decrease from 30 degrees</td>
+                    </tr>
+                    <tr>
+                        <td>Game too hard</td>
+                        <td>Tilt threshold or beam width</td>
+                        <td>Increase threshold or widen beam</td>
+                    </tr>
+                    <tr>
+                        <td>Circles roll forever</td>
+                        <td>linearDamping on circles</td>
+                        <td>Increase (try 0.3)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Feedback Phrases for CC</h3>
+            <p>When describing feel problems, use specific language:</p>
+            <ul>
+                <li>"Shapes settle too slowly after landing"</li>
+                <li>"The scale tips too easily with small shapes"</li>
+                <li>"Circles roll too far before stopping"</li>
+                <li>"The beam oscillates too much before settling"</li>
+                <li>"Shapes are passing through each other"</li>
+                <li>"The collapse slow-motion isn't slow enough"</li>
+                <li>"There's jittering when shapes are stacked"</li>
+            </ul>
+        </section>
+
+        <div class="divider"></div>
+
+        <section id="prompts">
+            <h2>CC Prompts</h2>
+
+            <p>Use these as starting points for each milestone. Adjust based on CC's output and your feedback.</p>
+
+            <h3>Milestone 1: Initial Prompt</h3>
+            <pre><code>Create a Flutter mobile game using Flame and Forge2D.
+
+The game concept: A physics-based stacking game where shapes are dropped onto a balancing scale. The scale tilts based on weight distribution.
+
+For this first milestone, create:
+
+1. A new Flutter project with these dependencies:
+   - flame: ^1.18.0
+   - flame_forge2d: ^0.18.0
+
+2. A Forge2DGame subclass called BalanceGame with:
+   - Gravity set to Vector2(0, 10.0)
+   - Zoom of 20.0
+
+3. A scale beam:
+   - Rectangle body, 30 units wide, 1 unit tall
+   - Positioned at center of screen
+   - Connected to a fixed point via RevoluteJoint (the pivot)
+   - Rendered as a light gray rectangle (#E8E8E8)
+
+4. A fulcrum:
+   - Static triangular body beneath the pivot point
+   - Visual only, no physics interaction needed
+   - Same color as beam
+
+5. Tap-to-spawn squares:
+   - Tap anywhere to create a 2x2 unit square
+   - Square falls with physics
+   - Medium gray color (#555555)
+   - Friction: 0.8, Restitution: 0.1, Density: 1.0
+
+6. Invisible walls:
+   - Left, right, and bottom boundaries
+   - Keep shapes from falling off screen
+
+7. Background color: near-black (#0A0A0A)
+
+The goal is to get the basic physics feel right. I want to tap, drop squares, and watch the scale respond to the weight distribution.</code></pre>
+
+            <h3>Milestone 2: Placement Control</h3>
+            <pre><code>Update the Balance game to add player-controlled placement.
+
+Changes needed:
+
+1. Remove tap-to-spawn. Instead:
+   - On tap, spawn a square at top-center of screen
+   - The square should be kinematic (not affected by gravity yet)
+
+2. Add drag handling:
+   - Dragging moves the square horizontally only
+   - Vertical position stays fixed at spawn height
+   - Add a thin vertical line showing where the shape will fall
+
+3. On drag end / release:
+   - Convert the square to dynamic (enable physics)
+   - Let it fall naturally
+
+4. After settling:
+   - Detect when the square has stopped moving (velocity near zero)
+   - Automatically spawn a new square at the top
+
+5. Add a game state enum:
+   - placing: Shape following finger
+   - settling: Waiting for physics to calm down
+   
+The flow should be: spawn → drag to position → release → wait for settle → spawn next</code></pre>
+
+            <h3>Milestone 3: End State</h3>
+            <pre><code>Add game end state when the scale tips too far.
+
+Implementation:
+
+1. Monitor beam angle each frame:
+   - Get angle from scaleBeam.body.angle
+   - Convert to degrees
+
+2. Tilt threshold:
+   - When absolute angle exceeds 30 degrees, trigger collapse
+
+3. On collapse:
+   - Set a timeScale variable to 0.3
+   - Multiply dt by timeScale in the update loop
+   - This creates slow-motion effect
+
+4. After 3 seconds of slow-mo:
+   - Show a semi-transparent overlay
+   - Display "Tap to restart" text
+   - Center it on screen
+
+5. On tap during ended state:
+   - Remove all shapes from the world
+   - Reset beam angle to 0
+   - Reset timeScale to 1.0
+   - Return to placing state
+
+6. Add a tilt indicator:
+   - A small UI element showing current danger level
+   - Could be a bar that fills, or background tint shifting toward red (#8B4049)
+   - 0% at balanced, 100% at threshold</code></pre>
+
+            <h3>Milestone 4: Shape Variety</h3>
+            <pre><code>Add all four shape types with distinct properties.
+
+Create these shape classes extending a base GameShape:
+
+1. CircleShape:
+   - Radius: 1.25 units
+   - Density: 0.5 (lightest)
+   - Color: #888888
+   - Will naturally roll due to geometry
+
+2. SquareShape:
+   - Size: 2x2 units
+   - Density: 1.0 (medium)
+   - Color: #555555
+   - Stable, good for stacking
+
+3. RectangleShape:
+   - Size: 3x1.5 units
+   - Density: 1.5 (heaviest)
+   - Color: #333333
+   - Orientation matters for balance
+
+4. TriangleShape:
+   - 3-sided polygon, radius ~1.5 units
+   - Density: 0.5 (light)
+   - Color: #888888
+   - Unstable, can tip over
+
+For now, spawn shapes randomly (pick a random type each time).
+
+All shapes should:
+- Have friction: 0.7
+- Have restitution: 0.1
+- Use the contact callback to detect landing (for future sound)</code></pre>
+
+            <h3>Milestone 5: Selection Mechanic</h3>
+            <pre><code>Add the shape selection system.
+
+Requirements:
+
+1. ShapeSelector component:
+   - Positioned at top of screen
+   - Shows three shape options in a row
+   - Each option displays a small preview of that shape type
+
+2. Selection pool:
+   - Initialize with 3 random shape types
+   - When player selects one, that slot gets a new random type
+   - Other two slots keep their shapes
+
+3. Interaction:
+   - Tap on a shape option to select it
+   - Selected shape becomes the active placing shape
+   - Disable selector while placing/settling
+   - Re-enable after settling
+
+4. Visual feedback:
+   - Highlight or border on the shape being hovered/tapped
+   - Clear indication of which shape is selected
+   - Dim the selector when disabled
+
+5. Update game flow:
+   - selecting: Waiting for player to pick a shape
+   - placing: Selected shape following finger
+   - settling: Physics running
+   - Back to selecting (or collapsing)
+
+The selector should be visually clean - just the shapes in rounded rectangles or circles, minimal decoration.</code></pre>
+
+            <h3>General Tuning Prompt Template</h3>
+            <pre><code>The [specific element] feels [description of problem].
+
+Current behavior: [what's happening]
+Desired behavior: [what should happen]
+
+I think the issue might be [parameter name] but adjust whatever makes sense.
+
+Reference the tuning table in the design doc if needed.</code></pre>
+        </section>
+
+        <div class="divider"></div>
+
+        <footer style="margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);">
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Balance — Game Design Document v1.0</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Flutter + Forge2D implementation for iOS & Android</p>
+        </footer>
+    </div>
+</body>
+</html>
