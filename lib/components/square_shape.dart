@@ -2,16 +2,16 @@ import 'dart:ui';
 
 import 'package:flame_forge2d/flame_forge2d.dart';
 import '../game/constants.dart';
-import '../utils/colors.dart';
+import '../game/shape_size.dart';
 
 class SquareShape extends BodyComponent {
   final Vector2 initialPosition;
-  final double shapeSize;
+  final ShapeSize shapeSize;
 
   SquareShape({
     required this.initialPosition,
-    double size = GameConstants.squareSize,
-  }) : shapeSize = size;
+    this.shapeSize = ShapeSize.medium,
+  });
 
   @override
   Body createBody() {
@@ -23,10 +23,10 @@ class SquareShape extends BodyComponent {
     final body = world.createBody(bodyDef);
 
     final shape = PolygonShape()
-      ..setAsBox(shapeSize / 2, shapeSize / 2, Vector2.zero(), 0);
+      ..setAsBox(shapeSize.size / 2, shapeSize.size / 2, Vector2.zero(), 0);
 
     final fixtureDef = FixtureDef(shape)
-      ..density = GameConstants.shapeDensity
+      ..density = shapeSize.density
       ..friction = GameConstants.shapeFriction
       ..restitution = GameConstants.shapeRestitution;
 
@@ -39,9 +39,9 @@ class SquareShape extends BodyComponent {
   void render(Canvas canvas) {
     final rect = Rect.fromCenter(
       center: Offset.zero,
-      width: shapeSize,
-      height: shapeSize,
+      width: shapeSize.size,
+      height: shapeSize.size,
     );
-    canvas.drawRect(rect, Paint()..color = GameColors.shapeMedium);
+    canvas.drawRect(rect, Paint()..color = shapeSize.color);
   }
 }

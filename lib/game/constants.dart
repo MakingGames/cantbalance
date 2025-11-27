@@ -12,11 +12,21 @@ class GameConstants {
   static const double beamFriction = 0.8;
   static const double beamRestitution = 0.1;
 
-  // Shapes
-  static const double squareSize = 1.5;
-  static const double shapeDensity = 1.0;
+  // Shapes - three sizes with different weights
+  static const double shapeSmallSize = 1.0;
+  static const double shapeMediumSize = 1.5;
+  static const double shapeLargeSize = 2.2;
+
+  static const double shapeSmallDensity = 0.8;
+  static const double shapeMediumDensity = 1.0;
+  static const double shapeLargeDensity = 1.3;
+
   static const double shapeFriction = 0.8;
   static const double shapeRestitution = 0.1;
+
+  // Legacy - for backwards compatibility
+  static const double squareSize = shapeMediumSize;
+  static const double shapeDensity = shapeMediumDensity;
 
   // Tilt threshold (degrees)
   static const double tiltThreshold = 30.0;

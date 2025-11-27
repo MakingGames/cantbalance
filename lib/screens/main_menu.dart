@@ -4,11 +4,13 @@ import '../utils/colors.dart';
 class MainMenu extends StatelessWidget {
   final VoidCallback onSandboxPressed;
   final VoidCallback onChallengePressed;
+  final int highScore;
 
   const MainMenu({
     super.key,
     required this.onSandboxPressed,
     required this.onChallengePressed,
+    this.highScore = 0,
   });
 
   @override
@@ -56,6 +58,20 @@ class MainMenu extends StatelessWidget {
                 onPressed: onSandboxPressed,
                 isPrimary: false,
               ),
+
+              // High score display
+              if (highScore > 0) ...[
+                const SizedBox(height: 48),
+                Text(
+                  'BEST: $highScore',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 2,
+                    color: GameColors.beam.withValues(alpha: 0.4),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

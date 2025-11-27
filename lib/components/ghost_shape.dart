@@ -1,19 +1,18 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import '../game/constants.dart';
-import '../utils/colors.dart';
+import '../game/shape_size.dart';
 
 /// A non-physics preview shape that shows where the piece will be placed.
 class GhostShape extends PositionComponent {
-  final double shapeSize;
+  final ShapeSize shapeSize;
 
   GhostShape({
     required Vector2 position,
-    this.shapeSize = GameConstants.squareSize,
+    this.shapeSize = ShapeSize.medium,
   }) : super(
           position: position,
-          size: Vector2.all(shapeSize),
+          size: Vector2.all(shapeSize.size),
           anchor: Anchor.center,
         );
 
@@ -21,13 +20,13 @@ class GhostShape extends PositionComponent {
   void render(Canvas canvas) {
     final rect = Rect.fromCenter(
       center: Offset.zero,
-      width: shapeSize,
-      height: shapeSize,
+      width: shapeSize.size,
+      height: shapeSize.size,
     );
 
     // Draw outline only (ghost effect)
     final paint = Paint()
-      ..color = GameColors.shapeMedium.withValues(alpha: 0.5)
+      ..color = shapeSize.color.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.1;
 
@@ -35,7 +34,7 @@ class GhostShape extends PositionComponent {
 
     // Draw semi-transparent fill
     final fillPaint = Paint()
-      ..color = GameColors.shapeMedium.withValues(alpha: 0.2);
+      ..color = shapeSize.color.withValues(alpha: 0.2);
 
     canvas.drawRect(rect, fillPaint);
   }
