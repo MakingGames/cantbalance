@@ -2,7 +2,9 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'game/balance_game.dart';
+import 'game/sandbox_game.dart';
+import 'game/challenge_game.dart';
+import 'screens/main_menu.dart';
 import 'utils/colors.dart';
 
 void main() {
@@ -38,23 +40,75 @@ class CantApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: GameColors.background,
       ),
-      home: const GameScreen(),
+      home: const MainMenuScreen(),
+    );
+  }
+}
+
+class MainMenuScreen extends StatelessWidget {
+  const MainMenuScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MainMenu(
+      onChallengePressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => GameScreen(
+              game: ChallengeGame(
+                onExit: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        );
+      },
+      onSandboxPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => GameScreen(
+              game: SandboxGame(
+                onExit: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class GameScreen extends StatelessWidget {
-  const GameScreen({super.key});
+  final FlameGame game;
+
+  const GameScreen({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: GameColors.background,
-      body: GameWidget(
-        game: BalanceGame(),
-        backgroundBuilder: (context) => Container(
-          color: GameColors.background,
-        ),
+      body: Stack(
+        children: [
+          GameWidget(
+            game: game,
+            backgroundBuilder: (context) => Container(
+              color: GameColors.background,
+            ),
+          ),
+          // Back button overlay
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: GameColors.beam.withValues(alpha: 0.6),
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,0 +1,4 @@
+enum GameMode {
+  sandbox,
+  challenge,
+}

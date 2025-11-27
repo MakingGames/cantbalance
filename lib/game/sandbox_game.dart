@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 
@@ -7,12 +9,16 @@ import '../components/square_shape.dart';
 import '../components/walls.dart';
 import 'constants.dart';
 
-class BalanceGame extends Forge2DGame with TapCallbacks {
+/// Sandbox mode: Tap anywhere to spawn shapes freely.
+/// No rules, no end state - just play with physics.
+class SandboxGame extends Forge2DGame with TapCallbacks {
   late ScaleBeam scaleBeam;
   late Fulcrum fulcrum;
   late Body anchorBody;
 
-  BalanceGame()
+  final VoidCallback? onExit;
+
+  SandboxGame({this.onExit})
       : super(
           gravity: GameConstants.gravity,
           zoom: GameConstants.zoom,
@@ -47,14 +53,12 @@ class BalanceGame extends Forge2DGame with TapCallbacks {
   }
 
   void _createPivotJoint(Vector2 pivotPoint) {
-    // Create a static anchor body at the pivot point
     final anchorDef = BodyDef(
       type: BodyType.static,
       position: pivotPoint,
     );
     anchorBody = world.createBody(anchorDef);
 
-    // Create revolute joint connecting the anchor to the beam
     final jointDef = RevoluteJointDef()
       ..initialize(anchorBody, scaleBeam.body, pivotPoint)
       ..enableLimit = false
@@ -67,10 +71,8 @@ class BalanceGame extends Forge2DGame with TapCallbacks {
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
 
-    // Convert screen position to world position
+    // Spawn a square at tap position
     final worldPosition = screenToWorld(event.localPosition);
-
-    // Spawn a square at the tap position
     world.add(SquareShape(initialPosition: worldPosition));
   }
 }
