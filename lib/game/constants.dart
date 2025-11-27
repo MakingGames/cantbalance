@@ -36,4 +36,7 @@ class GameConstants {
   static const double autoSpawnIntervalMin = 1.5; // minimum interval
   static const double autoSpawnIntervalDecreasePerShape = 0.3; // faster each shape
   static const double autoSpawnStartDelay = 3.0; // grace period before first spawn
+
+  // Phone tilt settings
+  static const double tiltGravityMultiplier = 1.5; // how much phone tilt affects gravity
 }

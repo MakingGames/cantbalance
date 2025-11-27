@@ -46,6 +46,14 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
         .clamp(GameConstants.autoSpawnIntervalMin, GameConstants.autoSpawnIntervalStart);
   }
 
+  /// Update gravity based on phone tilt (accelerometer)
+  void updateGravityFromTilt(double tiltX) {
+    // tiltX: negative = phone tilted left, positive = phone tilted right
+    // Scale the horizontal component based on tilt
+    final horizontalGravity = tiltX * GameConstants.tiltGravityMultiplier;
+    world.gravity = Vector2(horizontalGravity, GameConstants.gravity.y);
+  }
+
   // Callbacks
   void Function(double finalAngle, int score)? onGameOver;
   void Function(int score)? onScoreChanged;

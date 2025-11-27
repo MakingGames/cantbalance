@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import 'game/sandbox_game.dart';
 import 'game/challenge_game.dart';
@@ -110,6 +113,7 @@ class ChallengeGameScreen extends StatefulWidget {
 class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
   late ChallengeGame _game;
   HighScoreService? _highScoreService;
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   bool _showGameOver = false;
   double _finalAngle = 0;
   int _score = 0;
@@ -124,6 +128,21 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
     super.initState();
     _initHighScoreService();
     _createNewGame();
+    _startAccelerometer();
+  }
+
+  void _startAccelerometer() {
+    _accelerometerSubscription = accelerometerEventStream().listen((event) {
+      // event.x: tilt left/right (negative = tilted left)
+      // Pass to game to adjust gravity
+      _game.updateGravityFromTilt(event.x);
+    });
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _initHighScoreService() async {
