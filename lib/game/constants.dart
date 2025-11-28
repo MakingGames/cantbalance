@@ -1,15 +1,16 @@
 import 'package:flame_forge2d/flame_forge2d.dart';
+import 'sandbox_challenges.dart';
 
 class GameConstants {
   // World physics
-  static final gravity = Vector2(0, 10.0);
+  static final gravity = Vector2(0, SandboxChallenges.defaultGravity);
   static const double zoom = 10.0; // 10 pixels per world unit
 
   // Scale beam
   static const double beamWidth = 25.0; // 250 pixels at zoom 10
   static const double beamHeight = 0.8;
   static const double beamDensity = 2.0; // Heavier beam for stability
-  static const double beamFriction = 0.8;
+  static double get beamFriction => SandboxChallenges.defaultBeamFriction;
   static const double beamRestitution = 0.1;
 
   // Shapes - three sizes with different weights
@@ -41,21 +42,22 @@ class GameConstants {
   static const double autoSpawnIntervalDecreasePerShape = 0.3; // faster each shape
   static const double autoSpawnStartDelay = 3.0; // grace period before first spawn
 
-  // Phone tilt settings (controls beam rotation)
-  static const double tiltToAngleMultiplier = 0.05; // convert accelerometer to radians
-  static const double beamTiltTorqueStrength = 200.0; // torque applied to match tilt
+  // Phone tilt settings (controls beam rotation) - from SandboxChallenges
+  static double get tiltToAngleMultiplier => SandboxChallenges.defaultTiltSensitivity;
+  static double get beamTiltTorqueStrength => SandboxChallenges.defaultTiltStrength;
+  static const bool tiltInverted = true; // matches SandboxChallenges default
 
-  // Progressive gravity settings
-  static const double gravityStart = 10.0; // starting Y gravity
+  // Progressive gravity settings - from SandboxChallenges
+  static double get gravityStart => SandboxChallenges.defaultGravity;
   static const double gravityMax = 18.0; // maximum Y gravity
   static const double gravityIncreasePerShape = 0.5; // gravity increase per shape placed
 
-  // Wind settings (Level 5+)
-  static const double windGustIntervalMin = 2.0; // minimum seconds between gusts
-  static const double windGustIntervalMax = 5.0; // maximum seconds between gusts
-  static const double windForceMin = 15.0; // minimum horizontal force
-  static const double windForceMax = 40.0; // maximum horizontal force
-  static const double windGustDuration = 0.8; // how long each gust lasts
+  // Wind settings (Level 5+) - from SandboxChallenges
+  static double get windGustIntervalMin => SandboxChallenges.windGustIntervalMin;
+  static double get windGustIntervalMax => SandboxChallenges.windGustIntervalMax;
+  static double get windForceMin => SandboxChallenges.baseWindForceMin;
+  static double get windForceMax => SandboxChallenges.baseWindForceMax;
+  static double get windGustDuration => SandboxChallenges.windGustDuration;
 
   // Beam instability settings (Level 6+)
   static const double beamSlipperyFriction = 0.3; // reduced friction when slippery

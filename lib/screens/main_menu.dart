@@ -7,7 +7,9 @@ class MainMenu extends StatelessWidget {
   final VoidCallback onCampaignPressed;
   final VoidCallback onStackingPressed;
   final VoidCallback onThemeToggle;
+  final VoidCallback? onLogoTap;
   final bool isDarkMode;
+  final bool isDevMode;
   final int highScore;
   final int campaignStars;
   final int totalCampaignLevels;
@@ -19,7 +21,9 @@ class MainMenu extends StatelessWidget {
     required this.onCampaignPressed,
     required this.onStackingPressed,
     required this.onThemeToggle,
+    this.onLogoTap,
     required this.isDarkMode,
+    this.isDevMode = false,
     this.highScore = 0,
     this.campaignStars = 0,
     this.totalCampaignLevels = 15,
@@ -37,24 +41,56 @@ class MainMenu extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Title
-                  Text(
-                    'CANT',
-                    style: TextStyle(
-                      fontSize: 64,
-                      fontWeight: FontWeight.w200,
-                      letterSpacing: 16,
-                      color: GameColors.beam,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'a balance game',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w300,
-                      letterSpacing: 4,
-                      color: GameColors.beam.withValues(alpha: 0.6),
+                  // Title (tappable for dev mode easter egg)
+                  GestureDetector(
+                    onTap: onLogoTap,
+                    child: Column(
+                      children: [
+                        Text(
+                          'CANT',
+                          style: TextStyle(
+                            fontSize: 64,
+                            fontWeight: FontWeight.w200,
+                            letterSpacing: 16,
+                            color: GameColors.beam,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'a balance game',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            letterSpacing: 4,
+                            color: GameColors.beam.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        // Dev mode indicator
+                        if (isDevMode)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.science,
+                                  size: 12,
+                                  color: GameColors.beam.withValues(alpha: 0.4),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'DEV MODE',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 2,
+                                    color: GameColors.beam.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 80),

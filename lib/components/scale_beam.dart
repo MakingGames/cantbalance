@@ -47,4 +47,9 @@ class ScaleBeam extends BodyComponent {
       fixture.friction = friction;
     }
   }
+
+  /// Set the beam's angular damping (controls how quickly it stops swinging)
+  void setAngularDamping(double damping) {
+    body.angularDamping = damping;
+  }
 }

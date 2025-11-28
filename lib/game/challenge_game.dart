@@ -114,7 +114,8 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   void _applyBeamTorque() {
     // Convert phone tilt to target angle (radians)
     // tiltX is roughly -10 to +10, convert to reasonable angle
-    final targetAngle = _lastTiltX * GameConstants.tiltToAngleMultiplier;
+    final tiltDirection = GameConstants.tiltInverted ? -1.0 : 1.0;
+    final targetAngle = _lastTiltX * GameConstants.tiltToAngleMultiplier * tiltDirection;
     final currentAngle = scaleBeam.body.angle;
     final angleDiff = targetAngle - currentAngle;
 
