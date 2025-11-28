@@ -28,8 +28,12 @@ class GameConstants {
   static const double squareSize = shapeMediumSize;
   static const double shapeDensity = shapeMediumDensity;
 
-  // Tilt threshold (degrees)
+  // Tilt threshold (degrees) - for UI indicator only
   static const double tiltThreshold = 30.0;
+
+  // Floor threshold - shapes hitting the bottom of screen trigger game over
+  // Let them fall and give player time to react/stack more
+  static const double floorThreshold = 38.0;
 
   // Auto-spawn settings (progressive difficulty)
   static const double autoSpawnIntervalStart = 5.0; // seconds between spawns
@@ -37,11 +41,27 @@ class GameConstants {
   static const double autoSpawnIntervalDecreasePerShape = 0.3; // faster each shape
   static const double autoSpawnStartDelay = 3.0; // grace period before first spawn
 
-  // Phone tilt settings
-  static const double tiltGravityMultiplier = 1.5; // how much phone tilt affects gravity
+  // Phone tilt settings (controls beam rotation)
+  static const double tiltToAngleMultiplier = 0.05; // convert accelerometer to radians
+  static const double beamTiltTorqueStrength = 200.0; // torque applied to match tilt
 
   // Progressive gravity settings
   static const double gravityStart = 10.0; // starting Y gravity
   static const double gravityMax = 18.0; // maximum Y gravity
   static const double gravityIncreasePerShape = 0.5; // gravity increase per shape placed
+
+  // Wind settings (Level 5+)
+  static const double windGustIntervalMin = 2.0; // minimum seconds between gusts
+  static const double windGustIntervalMax = 5.0; // maximum seconds between gusts
+  static const double windForceMin = 15.0; // minimum horizontal force
+  static const double windForceMax = 40.0; // maximum horizontal force
+  static const double windGustDuration = 0.8; // how long each gust lasts
+
+  // Beam instability settings (Level 6+)
+  static const double beamSlipperyFriction = 0.3; // reduced friction when slippery
+
+  // Time pressure settings (Level 7+)
+  static const double placementTimeLimit = 8.0; // seconds to place a shape
+  static const double placementTimeLimitMin = 4.0; // minimum time limit
+  static const double placementTimeDecreasePerShape = 0.2; // gets faster
 }

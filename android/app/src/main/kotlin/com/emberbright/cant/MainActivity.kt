@@ -1,4 +1,4 @@
-package com.example.balance
+package com.emberbright.cant
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -4,14 +4,17 @@ import 'dart:ui';
 import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 
+import '../components/circle_shape.dart' show GameCircle;
 import '../components/fulcrum.dart';
 import '../components/ghost_shape.dart';
 import '../components/scale_beam.dart';
 import '../components/square_shape.dart';
+import '../components/triangle_shape.dart';
 import '../components/walls.dart';
 import 'constants.dart';
 import 'game_level.dart';
 import 'shape_size.dart';
+import 'shape_type.dart';
 
 enum GameState { playing, gameOver }
 
@@ -28,6 +31,12 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
 
   GameState _gameState = GameState.playing;
   GameState get gameState => _gameState;
+
+  bool _isPaused = false;
+  bool get isPaused => _isPaused;
+
+  void pause() => _isPaused = true;
+  void resume() => _isPaused = false;
 
   int _score = 0;
   int get score => _score;
@@ -64,26 +73,79 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
         .clamp(GameConstants.gravityStart, GameConstants.gravityMax);
   }
 
+  /// Current time limit for placement (decreases progressively in time pressure level)
+  double get _currentTimeLimit {
+    if (!_currentLevel.hasTimePressure) return double.infinity;
+    final shapesInTimePressure = _score - GameLevel.timePressure.minScore;
+    final decrease = shapesInTimePressure * GameConstants.placementTimeDecreasePerShape;
+    return (GameConstants.placementTimeLimit - decrease)
+        .clamp(GameConstants.placementTimeLimitMin, GameConstants.placementTimeLimit);
+  }
+
+  /// Remaining time for placement (0 if time pressure not active)
+  double get remainingPlacementTime => _timePressureActive ? _placementTimer : 0;
+
   // Track last tilt value for gravity updates
   double _lastTiltX = 0;
 
-  /// Update gravity based on phone tilt (accelerometer)
-  void updateGravityFromTilt(double tiltX) {
+  // Wind state (Level 5+)
+  double _timeSinceLastGust = 0;
+  double _nextGustInterval = 3.0;
+  double _currentWindForce = 0;
+  double _windGustTimer = 0;
+  bool _isWindActive = false;
+
+  // Beam instability state (Level 6+)
+  double _beamNudgeTimer = 0;
+  double _nextNudgeInterval = 2.0;
+
+  // Time pressure state (Level 7+)
+  double _placementTimer = 0;
+  bool _timePressureActive = false;
+
+  /// Update beam tilt based on phone tilt (accelerometer)
+  void updateBeamFromTilt(double tiltX) {
+    if (!_isReady) return;
     _lastTiltX = tiltX;
-    _updateGravity();
+    _applyBeamTorque();
   }
 
-  /// Recalculate gravity with current tilt and progressive Y component
+  /// Apply torque to beam to match phone tilt
+  void _applyBeamTorque() {
+    // Convert phone tilt to target angle (radians)
+    // tiltX is roughly -10 to +10, convert to reasonable angle
+    final targetAngle = _lastTiltX * GameConstants.tiltToAngleMultiplier;
+    final currentAngle = scaleBeam.body.angle;
+    final angleDiff = targetAngle - currentAngle;
+
+    // Apply torque proportional to angle difference
+    final torque = angleDiff * GameConstants.beamTiltTorqueStrength;
+    scaleBeam.body.applyTorque(torque);
+  }
+
+  /// Update gravity for progressive difficulty (Y component only)
   void _updateGravity() {
-    final horizontalGravity = _lastTiltX * GameConstants.tiltGravityMultiplier;
-    world.gravity = Vector2(horizontalGravity, _currentGravityY);
+    world.gravity = Vector2(0, _currentGravityY);
   }
 
   /// Check if score crosses a level threshold
   void _checkLevelChange() {
     final newLevel = GameLevel.fromScore(_score);
     if (newLevel != _currentLevel) {
+      final previousLevel = _currentLevel;
       _currentLevel = newLevel;
+
+      // Apply slippery beam when entering instability level
+      if (newLevel.hasBeamInstability && !previousLevel.hasBeamInstability) {
+        scaleBeam.setFriction(GameConstants.beamSlipperyFriction);
+      }
+
+      // Activate time pressure when entering that level
+      if (newLevel.hasTimePressure && !previousLevel.hasTimePressure) {
+        _timePressureActive = true;
+        _placementTimer = _currentTimeLimit;
+      }
+
       onLevelChanged?.call(newLevel);
     }
   }
@@ -93,6 +155,7 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   void Function(int score)? onScoreChanged;
   void Function(double angleDegrees)? onTiltChanged;
   void Function(GameLevel level)? onLevelChanged;
+  void Function(double remainingTime, double totalTime)? onTimePressureChanged;
   VoidCallback? onShapePlaced;
   final VoidCallback? onExit;
 
@@ -100,7 +163,7 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
     _selectedShapeSize = size;
   }
 
-  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged, this.onLevelChanged, this.onShapePlaced})
+  ChallengeGame({this.onExit, this.onGameOver, this.onScoreChanged, this.onTiltChanged, this.onLevelChanged, this.onTimePressureChanged, this.onShapePlaced})
       : super(
           gravity: GameConstants.gravity,
           zoom: GameConstants.zoom,
@@ -152,6 +215,9 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
 
   @override
   void update(double dt) {
+    // Check pause BEFORE updating physics
+    if (_isPaused) return;
+
     super.update(dt);
 
     if (!_isReady || _gameState != GameState.playing) return;
@@ -168,15 +234,53 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
       }
     }
 
-    // Check tilt angle (radians to degrees)
+    // Wind gust logic (Level 5+)
+    if (_currentLevel.hasWind) {
+      _updateWind(dt);
+    }
+
+    // Beam instability logic (Level 6+)
+    if (_currentLevel.hasBeamInstability) {
+      _updateBeamInstability(dt);
+    }
+
+    // Time pressure logic (Level 7+)
+    if (_timePressureActive) {
+      _placementTimer -= dt;
+      onTimePressureChanged?.call(_placementTimer, _currentTimeLimit);
+      if (_placementTimer <= 0) {
+        _triggerGameOver(currentTiltDegrees);
+        return;
+      }
+    }
+
+    // Check tilt angle (radians to degrees) for UI indicator
     final angleRadians = scaleBeam.body.angle;
     final angleDegrees = angleRadians * 180 / pi;
-
-    // Notify listeners of tilt change
     onTiltChanged?.call(angleDegrees);
 
-    if (angleDegrees.abs() > GameConstants.tiltThreshold) {
-      _triggerGameOver(angleDegrees);
+    // Check if any shapes have fallen below the floor threshold
+    _checkForFallenShapes();
+  }
+
+  void _checkForFallenShapes() {
+    for (final child in world.children) {
+      if (child is SquareShape) {
+        if (child.body.position.y > GameConstants.floorThreshold) {
+          _triggerGameOver(currentTiltDegrees);
+          return;
+        }
+      } else if (child is GameCircle) {
+        if (child.body.position.y > GameConstants.floorThreshold) {
+          _triggerGameOver(currentTiltDegrees);
+          return;
+        }
+      } else if (child is TriangleShape) {
+        if (child.body.position.y > GameConstants.floorThreshold) {
+          _triggerGameOver(currentTiltDegrees);
+          return;
+        }
+      }
     }
   }
 
@@ -192,10 +296,84 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
     final sizes = ShapeSize.values;
     final randomSize = sizes[_random.nextInt(sizes.length)];
 
-    world.add(SquareShape(
-      initialPosition: Vector2(x, y),
-      shapeSize: randomSize,
-    ));
+    // Random shape type (if level supports variety)
+    if (_currentLevel.hasShapeVariety) {
+      final shapeTypes = GameShapeType.values;
+      final randomType = shapeTypes[_random.nextInt(shapeTypes.length)];
+      _addShape(randomType, Vector2(x, y), randomSize);
+    } else {
+      world.add(SquareShape(
+        initialPosition: Vector2(x, y),
+        shapeSize: randomSize,
+      ));
+    }
+  }
+
+  void _addShape(GameShapeType type, Vector2 position, ShapeSize size) {
+    switch (type) {
+      case GameShapeType.square:
+        world.add(SquareShape(initialPosition: position, shapeSize: size));
+      case GameShapeType.circle:
+        world.add(GameCircle(initialPosition: position, shapeSize: size));
+      case GameShapeType.triangle:
+        world.add(TriangleShape(initialPosition: position, shapeSize: size));
+    }
+  }
+
+  void _updateWind(double dt) {
+    if (_isWindActive) {
+      // Apply wind force to all shapes
+      for (final child in world.children) {
+        if (child is SquareShape) {
+          child.body.applyForce(Vector2(_currentWindForce, 0));
+        } else if (child is GameCircle) {
+          child.body.applyForce(Vector2(_currentWindForce, 0));
+        } else if (child is TriangleShape) {
+          child.body.applyForce(Vector2(_currentWindForce, 0));
+        }
+      }
+
+      // Count down gust timer
+      _windGustTimer -= dt;
+      if (_windGustTimer <= 0) {
+        _isWindActive = false;
+        _currentWindForce = 0;
+        // Set next gust interval
+        _nextGustInterval = GameConstants.windGustIntervalMin +
+            _random.nextDouble() *
+                (GameConstants.windGustIntervalMax - GameConstants.windGustIntervalMin);
+      }
+    } else {
+      // Wait for next gust
+      _timeSinceLastGust += dt;
+      if (_timeSinceLastGust >= _nextGustInterval) {
+        // Start a new gust
+        _isWindActive = true;
+        _timeSinceLastGust = 0;
+        _windGustTimer = GameConstants.windGustDuration;
+
+        // Random direction and force
+        final direction = _random.nextBool() ? 1.0 : -1.0;
+        final forceMagnitude = GameConstants.windForceMin +
+            _random.nextDouble() *
+                (GameConstants.windForceMax - GameConstants.windForceMin);
+        _currentWindForce = direction * forceMagnitude;
+      }
+    }
+  }
+
+  void _updateBeamInstability(double dt) {
+    _beamNudgeTimer += dt;
+    if (_beamNudgeTimer >= _nextNudgeInterval) {
+      _beamNudgeTimer = 0;
+      // Random interval for next nudge (1-3 seconds)
+      _nextNudgeInterval = 1.0 + _random.nextDouble() * 2.0;
+
+      // Apply a small random torque to the beam
+      final torqueDirection = _random.nextBool() ? 1.0 : -1.0;
+      final torqueMagnitude = 50.0 + _random.nextDouble() * 100.0;
+      scaleBeam.body.applyTorque(torqueDirection * torqueMagnitude);
+    }
   }
 
   void _triggerGameOver(double finalAngle) {
@@ -274,6 +452,11 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
       _updateGravity();
       onScoreChanged?.call(_score);
       onShapePlaced?.call();
+
+      // Reset time pressure timer if active
+      if (_timePressureActive) {
+        _placementTimer = _currentTimeLimit;
+      }
 
       // Remove ghost
       _ghostShape!.removeFromParent();

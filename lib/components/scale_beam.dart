@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import '../game/constants.dart';
 import '../utils/colors.dart';
+import '../utils/shape_painter.dart';
 
 class ScaleBeam extends BodyComponent {
   final Vector2 beamSize;
@@ -37,11 +38,13 @@ class ScaleBeam extends BodyComponent {
 
   @override
   void render(Canvas canvas) {
-    final rect = Rect.fromCenter(
-      center: Offset.zero,
-      width: beamSize.x,
-      height: beamSize.y,
-    );
-    canvas.drawRect(rect, Paint()..color = GameColors.beam);
+    ShapePainter.drawBeam(canvas, beamSize.x, beamSize.y, GameColors.beam);
+  }
+
+  /// Set the beam's friction (for slippery beam effect)
+  void setFriction(double friction) {
+    for (final fixture in body.fixtures) {
+      fixture.friction = friction;
+    }
   }
 }

@@ -18,6 +18,7 @@ class TutorialOverlay extends StatelessWidget {
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Hand/tap icon pointing down
               Icon(
@@ -29,6 +30,7 @@ class TutorialOverlay extends StatelessWidget {
               // Main instruction
               Text(
                 'DRAG ABOVE THE BEAM',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w300,
@@ -39,6 +41,7 @@ class TutorialOverlay extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'TO DROP SHAPES',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w300,
@@ -50,6 +53,7 @@ class TutorialOverlay extends StatelessWidget {
               // Secondary instruction
               Text(
                 'KEEP THE BALANCE',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w300,
@@ -60,6 +64,7 @@ class TutorialOverlay extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'TILT YOUR PHONE TO SHIFT GRAVITY',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w300,
@@ -71,6 +76,7 @@ class TutorialOverlay extends StatelessWidget {
               // Tap to continue
               Text(
                 'TAP TO START',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flame_forge2d/flame_forge2d.dart';
 import '../utils/colors.dart';
+import '../utils/shape_painter.dart';
 
 class Fulcrum extends BodyComponent {
   final Vector2 initialPosition;
@@ -43,14 +44,6 @@ class Fulcrum extends BodyComponent {
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()..color = GameColors.fulcrum;
-
-    final path = Path()
-      ..moveTo(-baseWidth / 2, height / 2)
-      ..lineTo(baseWidth / 2, height / 2)
-      ..lineTo(0, -height / 2)
-      ..close();
-
-    canvas.drawPath(path, paint);
+    ShapePainter.drawFulcrum(canvas, baseWidth, height, GameColors.fulcrum);
   }
 }
