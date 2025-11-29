@@ -29,6 +29,13 @@ void main() {
     OrientationService.resetForTesting();
     ThemeService.resetForTesting();
     TutorialService.resetForTesting();
+
+    // Initialize all services after reset
+    await DevModeService.getInstance();
+    await HighScoreService.getInstance();
+    await LevelProgressService.getInstance();
+    await OrientationService.getInstance();
+    await TutorialService.getInstance();
   });
 
   group('App Launch', () {
