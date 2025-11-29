@@ -13,6 +13,7 @@ import 'constants.dart';
 import 'shape_size.dart';
 import 'shape_type.dart';
 import 'stacking_physics.dart';
+import 'systems/spatial_hash.dart';
 
 enum StackingGameState { playing, gameOver }
 
@@ -48,6 +49,12 @@ class StackingGame extends Forge2DGame with DragCallbacks {
   // Physics settings for test mode
   StackingPhysics _physics = StackingPhysics();
   StackingPhysics get physics => _physics;
+
+  // Spatial hash for efficient proximity queries in magnetic attraction
+  // Cell size matches attraction range for optimal performance
+  final SpatialHash _spatialHash = SpatialHash(
+    cellSize: StackingPhysics.attractionRange,
+  );
 
   void updatePhysics(StackingPhysics newPhysics) {
     _physics = newPhysics;
@@ -172,23 +179,42 @@ class StackingGame extends Forge2DGame with DragCallbacks {
   }
 
   void _applyMagneticAttraction() {
-    // Get all dynamic bodies (shapes)
+    // Clear and rebuild spatial hash each frame
+    _spatialHash.clear();
+
+    // Collect all shape bodies and insert into spatial hash
     final bodies = <Body>[];
     for (final child in world.children) {
+      Body? body;
       if (child is SquareShape) {
-        bodies.add(child.body);
+        body = child.body;
       } else if (child is GameCircle) {
-        bodies.add(child.body);
+        body = child.body;
       } else if (child is TriangleShape) {
-        bodies.add(child.body);
+        body = child.body;
+      }
+      if (body != null) {
+        bodies.add(body);
+        _spatialHash.insert(body);
       }
     }
 
-    // Apply attraction between nearby shapes
-    for (int i = 0; i < bodies.length; i++) {
-      for (int j = i + 1; j < bodies.length; j++) {
-        final bodyA = bodies[i];
-        final bodyB = bodies[j];
+    // Track processed pairs to avoid duplicate force application
+    final processed = <int>{};
+
+    // For each body, only check nearby bodies from spatial hash
+    // This reduces O(n²) to O(n*k) where k is avg bodies per cell region
+    for (final bodyA in bodies) {
+      final hashA = identityHashCode(bodyA);
+
+      for (final bodyB in _spatialHash.getNearby(bodyA.position)) {
+        // Skip self and already-processed pairs
+        if (identical(bodyA, bodyB)) continue;
+
+        final hashB = identityHashCode(bodyB);
+        final pairKey = hashA < hashB ? hashA ^ hashB : hashB ^ hashA;
+        if (processed.contains(pairKey)) continue;
+        processed.add(pairKey);
 
         final diff = bodyB.position - bodyA.position;
         final distance = diff.length;
@@ -196,7 +222,9 @@ class StackingGame extends Forge2DGame with DragCallbacks {
         // Only attract if within range
         if (distance < StackingPhysics.attractionRange && distance > 0.1) {
           final direction = diff.normalized();
-          final force = direction * StackingPhysics.attractionForce * (1 - distance / StackingPhysics.attractionRange);
+          final force = direction *
+              StackingPhysics.attractionForce *
+              (1 - distance / StackingPhysics.attractionRange);
 
           bodyA.applyForce(force);
           bodyB.applyForce(-force);

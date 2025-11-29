@@ -74,16 +74,14 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
   bool _showWin = false;
   bool _showLose = false;
   int _score = 0;
-  double _currentTilt = 0;
   ShapeSize _selectedShapeSize = ShapeSize.medium;
 
-  // Mechanic indicator state
-  double _timeRemaining = 0;
-  double _currentHeight = 0;
-
-  // Wind indicator state
-  WindState _windState = WindState.inactive;
-  double _windDirection = 0;
+  // ValueNotifiers for high-frequency updates - avoids 60x/sec full rebuilds
+  late final ValueNotifier<double> _tiltNotifier = ValueNotifier(0);
+  late final ValueNotifier<double> _timeNotifier = ValueNotifier(0);
+  late final ValueNotifier<double> _heightNotifier = ValueNotifier(0);
+  late final ValueNotifier<({WindState state, double direction})> _windNotifier =
+      ValueNotifier((state: WindState.inactive, direction: 0));
 
   @override
   void initState() {
@@ -102,6 +100,10 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
+    _tiltNotifier.dispose();
+    _timeNotifier.dispose();
+    _heightNotifier.dispose();
+    _windNotifier.dispose();
     super.dispose();
   }
 
@@ -128,51 +130,19 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
           _score = score;
         });
       },
-      onTiltChanged: (angle) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _currentTilt = angle;
-            });
-          }
-        });
-      },
-      onTimePressureChanged: (remaining, total) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _timeRemaining = remaining;
-            });
-          }
-        });
-      },
-      onHeightChanged: (height, target) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _currentHeight = height;
-            });
-          }
-        });
-      },
+      onTiltChanged: (angle) => _tiltNotifier.value = angle,
+      onTimePressureChanged: (remaining, total) => _timeNotifier.value = remaining,
+      onHeightChanged: (height, target) => _heightNotifier.value = height,
       onShapePlaced: () {
         HapticFeedback.lightImpact();
       },
       onWindChanged: (isActive, isWarning, direction) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              if (isActive) {
-                _windState = WindState.active;
-              } else if (isWarning) {
-                _windState = WindState.warning;
-              } else {
-                _windState = WindState.inactive;
-              }
-              _windDirection = direction;
-            });
-          }
-        });
+        final state = isActive
+            ? WindState.active
+            : isWarning
+                ? WindState.warning
+                : WindState.inactive;
+        _windNotifier.value = (state: state, direction: direction);
       },
     );
   }
@@ -185,16 +155,18 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
   }
 
   void _retry() {
+    // Reset notifiers
+    _tiltNotifier.value = 0;
+    _timeNotifier.value = 0;
+    _heightNotifier.value = 0;
+    _windNotifier.value = (state: WindState.inactive, direction: 0);
+
     setState(() {
       _showIntro = true;
       _showWin = false;
       _showLose = false;
       _score = 0;
       _selectedShapeSize = ShapeSize.medium;
-      _timeRemaining = 0;
-      _currentHeight = 0;
-      _windState = WindState.inactive;
-      _windDirection = 0;
       _createNewGame();
     });
   }
@@ -249,54 +221,66 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
       leftIndicators: [
         // Wind indicator (shown when level has wind)
         if (widget.level.hasWind)
-          AnimatedWindIndicator(
-            state: _windState,
-            direction: _windDirection,
+          ValueListenableBuilder<({WindState state, double direction})>(
+            valueListenable: _windNotifier,
+            builder: (context, wind, _) => AnimatedWindIndicator(
+              state: wind.state,
+              direction: wind.direction,
+            ),
           ),
         if (_hasMechanicIndicators())
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: MechanicIndicators(
-              hasWind: false, // Wind shown via AnimatedWindIndicator above
-              hasGravity: widget.level.hasIncreasedGravity,
-              hasInstability: widget.level.hasBeamInstability,
-              hasTimer: widget.level.hasTimePressure,
-              gravityMultiplier: widget.level.hasIncreasedGravity
-                  ? widget.level.gravityY / 10.0
-                  : null,
-              timeRemaining: widget.level.hasTimePressure ? _timeRemaining : null,
+          ValueListenableBuilder<double>(
+            valueListenable: _timeNotifier,
+            builder: (context, timeRemaining, _) => Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: MechanicIndicators(
+                hasWind: false, // Wind shown via AnimatedWindIndicator above
+                hasGravity: widget.level.hasIncreasedGravity,
+                hasInstability: widget.level.hasBeamInstability,
+                hasTimer: widget.level.hasTimePressure,
+                gravityMultiplier: widget.level.hasIncreasedGravity
+                    ? widget.level.gravityY / 10.0
+                    : null,
+                timeRemaining: widget.level.hasTimePressure ? timeRemaining : null,
+              ),
             ),
           ),
       ],
       // Center: Level info and progress
-      centerContent: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'LEVEL ${widget.level.number}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w300,
-              letterSpacing: 4,
-              color: GameColors.beam.withValues(alpha: 0.6),
+      centerContent: ValueListenableBuilder<double>(
+        valueListenable: _heightNotifier,
+        builder: (context, height, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'LEVEL ${widget.level.number}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 4,
+                color: GameColors.beam.withValues(alpha: 0.6),
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${_currentHeight.toStringAsFixed(1)} / ${widget.level.targetHeight.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w200,
-              letterSpacing: 4,
-              color: GameColors.beam.withValues(alpha: 0.8),
+            const SizedBox(height: 4),
+            Text(
+              '${height.toStringAsFixed(1)} / ${widget.level.targetHeight.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w200,
+                letterSpacing: 4,
+                color: GameColors.beam.withValues(alpha: 0.8),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       // Right: Tilt indicator
       rightContent: SizedBox(
         width: 48,
-        child: TiltIndicator(angleDegrees: _currentTilt),
+        child: ValueListenableBuilder<double>(
+          valueListenable: _tiltNotifier,
+          builder: (context, tilt, _) => TiltIndicator(angleDegrees: tilt),
+        ),
       ),
       // Bottom: Shape picker
       bottomContent: ShapePicker(

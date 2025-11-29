@@ -17,15 +17,47 @@ import 'utils/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
-  final themeService = await ThemeService.getInstance();
-  await DevModeService.getInstance();
-  await OrientationService.getInstance();
+  try {
+    // Initialize services
+    final themeService = await ThemeService.getInstance();
+    await DevModeService.getInstance();
+    await OrientationService.getInstance();
 
-  // Lock to preferred orientation (default portrait, can be changed in menu)
-  await OrientationService.instance.lockOrientation();
+    // Lock to preferred orientation (default portrait, can be changed in menu)
+    await OrientationService.instance.lockOrientation();
 
-  runApp(CantApp(themeService: themeService));
+    runApp(CantApp(themeService: themeService));
+  } catch (e) {
+    // If service initialization fails, show error screen
+    runApp(const _ErrorApp());
+  }
+}
+
+/// Fallback app shown when service initialization fails
+class _ErrorApp extends StatelessWidget {
+  const _ErrorApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: GameColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Text(
+              'Failed to initialize app.\nPlease restart.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: GameColors.beam,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class CantApp extends StatelessWidget {

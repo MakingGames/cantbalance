@@ -36,11 +36,13 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
   int _score = 0;
   int _highScore = 0;
   bool _isNewHighScore = false;
-  double _currentTilt = 0;
   bool _showTiltIndicator = true;
   ShapeSize _selectedShapeSize = ShapeSize.medium;
   GameLevel? _levelNotification;
   Timer? _levelNotificationTimer;
+
+  // ValueNotifier for tilt - avoids 60x/sec full rebuilds
+  late final ValueNotifier<double> _tiltNotifier = ValueNotifier(0);
 
   @override
   void initState() {
@@ -71,6 +73,7 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
   void dispose() {
     _accelerometerSubscription?.cancel();
     _levelNotificationTimer?.cancel();
+    _tiltNotifier.dispose();
     super.dispose();
   }
 
@@ -127,15 +130,7 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
           _score = score;
         });
       },
-      onTiltChanged: (angle) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _currentTilt = angle;
-            });
-          }
-        });
-      },
+      onTiltChanged: (angle) => _tiltNotifier.value = angle,
       onShapePlaced: () {
         HapticFeedback.lightImpact();
       },
@@ -203,8 +198,10 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
                                 });
                               },
                               child: _showTiltIndicator
-                                  ? TiltIndicator(
-                                      angleDegrees: _currentTilt,
+                                  ? ValueListenableBuilder<double>(
+                                      valueListenable: _tiltNotifier,
+                                      builder: (context, tilt, _) =>
+                                          TiltIndicator(angleDegrees: tilt),
                                     )
                                   : Icon(
                                       Icons.radio_button_unchecked,
