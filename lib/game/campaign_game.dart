@@ -7,6 +7,7 @@ import 'package:flame_forge2d/flame_forge2d.dart';
 import '../components/circle_shape.dart' show GameCircle;
 import '../components/fulcrum.dart';
 import '../components/ghost_shape.dart';
+import '../components/height_marker.dart';
 import '../components/scale_beam.dart';
 import '../components/square_shape.dart';
 import '../components/triangle_shape.dart';
@@ -45,6 +46,14 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
   // Height tracking for height-based levels
   double _currentHeight = 0;
   double get currentHeight => _currentHeight;
+
+  // Time-based settling - height must be stable for 1 second to count
+  double _lastRecordedHeight = 0;
+  double _heightStableTime = 0;
+  bool _heightIsSettled = false;
+
+  // Height marker component
+  HeightMarker? _heightMarker;
 
   ShapeSize _selectedShapeSize = ShapeSize.medium;
   ShapeSize get selectedShapeSize => _selectedShapeSize;
@@ -160,6 +169,15 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
     );
     world.add(scaleBeam);
 
+    // Add height marker (positioned at beam surface initially)
+    final beamSurface = _beamY - GameConstants.beamHeight / 2;
+    _heightMarker = HeightMarker(
+      lineWidth: GameConstants.beamWidth,
+      targetHeight: level.targetHeight,
+      position: Vector2(0, beamSurface),
+    );
+    world.add(_heightMarker!);
+
     // Create pivot joint after beam body is ready
     scaleBeam.loaded.then((_) {
       _createPivotJoint(Vector2(0, _beamY));
@@ -242,14 +260,8 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
     // Check if any shapes have fallen below the floor threshold
     _checkForFallenShapes();
 
-    // Track height and check win condition
-    _currentHeight = _calculateCurrentHeight();
-    onHeightChanged?.call(_currentHeight, level.targetHeight);
-
-    // Check win condition
-    if (_currentHeight >= level.targetHeight) {
-      _checkWinCondition();
-    }
+    // Track height with time-based settling
+    _updateHeightTracking(dt);
   }
 
   void _checkForFallenShapes() {
@@ -271,6 +283,52 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
         }
       }
     }
+  }
+
+  /// Time-based height tracking - height must be stable for 1 second to count as "settled"
+  void _updateHeightTracking(double dt) {
+    // Calculate real-time height from all shapes (regardless of velocity)
+    _currentHeight = _calculateCurrentHeight();
+
+    // Update height marker visual
+    _heightMarker?.updateHeight(_currentHeight);
+
+    // Notify UI of current height
+    onHeightChanged?.call(_currentHeight, level.targetHeight);
+
+    // Check if height has changed significantly
+    if ((_currentHeight - _lastRecordedHeight).abs() > GameConstants.heightChangeThreshold) {
+      // Height changed - reset stability timer
+      _lastRecordedHeight = _currentHeight;
+      _heightStableTime = 0;
+      _heightIsSettled = false;
+    } else {
+      // Height stable - accumulate time
+      _heightStableTime += dt;
+
+      // After settle time, mark as settled (varies by level)
+      if (_heightStableTime >= level.settleTime && !_heightIsSettled) {
+        _heightIsSettled = true;
+
+        // Check win condition when height settles
+        if (_currentHeight >= level.targetHeight) {
+          _triggerWin();
+        }
+      }
+    }
+  }
+
+  void _triggerWin() {
+    _gameState = CampaignGameState.won;
+
+    // Cancel any active drag
+    if (_ghostShape != null) {
+      _ghostShape!.removeFromParent();
+      _ghostShape = null;
+    }
+
+    // Notify listener
+    onWin?.call(_score);
   }
 
   void _spawnRandomShape() {
@@ -341,81 +399,42 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
     onLose?.call(finalAngle, _score);
   }
 
-  void _checkWinCondition() {
-    // Check height-based win condition
-    if (_currentHeight >= level.targetHeight) {
-      // Check if all shapes have settled (low velocity)
-      if (!_areShapesSettled()) {
-        return; // Wait for shapes to settle before declaring win
-      }
-
-      _gameState = CampaignGameState.won;
-
-      // Cancel any active drag
-      if (_ghostShape != null) {
-        _ghostShape!.removeFromParent();
-        _ghostShape = null;
-      }
-
-      // Notify listener
-      onWin?.call(_score);
-    }
-  }
-
-  /// Check if all shapes on the beam have settled (velocity below threshold)
-  bool _areShapesSettled() {
-    for (final child in world.children) {
-      if (child is SquareShape) {
-        if (child.body.linearVelocity.length > GameConstants.settlingVelocityThreshold) {
-          return false;
-        }
-      } else if (child is GameCircle) {
-        if (child.body.linearVelocity.length > GameConstants.settlingVelocityThreshold) {
-          return false;
-        }
-      } else if (child is TriangleShape) {
-        if (child.body.linearVelocity.length > GameConstants.settlingVelocityThreshold) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  /// Calculate current stack height (distance from beam surface to top of highest settled shape)
+  /// Calculate current stack height (distance from beam surface to top of highest shape)
+  /// Uses real-time position - no velocity checking (time-based settling handles that)
+  /// Excludes shapes that are still falling from auto-spawn (above play area)
   double _calculateCurrentHeight() {
     // Beam surface is at _beamY - beamHeight/2 (top of beam)
     final beamSurface = _beamY - GameConstants.beamHeight / 2;
     double highestPoint = beamSurface; // Start at beam surface (no height)
 
+    // Threshold for "in play area" - shapes above this are still falling from spawn
+    // Spawn point is -15.0, so -10.0 gives them time to enter the play area
+    const double inPlayThreshold = -10.0;
+
     for (final child in world.children) {
+      double shapeY = beamSurface;
       double shapeTop = beamSurface;
-      bool isSettled = false;
 
       if (child is SquareShape) {
-        // Only count shapes that have fallen AND are now settled
-        if (child.hasHadVelocity &&
-            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
-          shapeTop = child.body.position.y - child.shapeSize.size / 2;
-          isSettled = true;
-        }
+        shapeY = child.body.position.y;
+        shapeTop = shapeY - child.shapeSize.size / 2;
       } else if (child is GameCircle) {
-        if (child.hasHadVelocity &&
-            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
-          shapeTop = child.body.position.y - child.shapeSize.size / 2;
-          isSettled = true;
-        }
+        shapeY = child.body.position.y;
+        shapeTop = shapeY - child.shapeSize.size / 2;
       } else if (child is TriangleShape) {
-        if (child.hasHadVelocity &&
-            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
-          shapeTop = child.body.position.y - child.shapeSize.size / 2;
-          isSettled = true;
-        }
+        shapeY = child.body.position.y;
+        shapeTop = shapeY - child.shapeSize.size / 2;
+      } else {
+        continue; // Skip non-shape components
+      }
+
+      // Skip shapes that are still falling from spawn (above play area)
+      if (shapeY < inPlayThreshold) {
+        continue;
       }
 
       // Lower y = higher position (y increases downward)
-      // Only update if this shape is settled
-      if (isSettled && shapeTop < highestPoint) {
+      if (shapeTop < highestPoint) {
         highestPoint = shapeTop;
       }
     }
@@ -492,8 +511,7 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
         _placementTimer = GameConstants.placementTimeLimit;
       }
 
-      // Check win condition
-      _checkWinCondition();
+      // Win condition is now checked via time-based settling in _updateHeightTracking
 
       // Remove ghost
       _ghostShape!.removeFromParent();

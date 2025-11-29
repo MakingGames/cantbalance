@@ -7,6 +7,7 @@ import 'package:flame_forge2d/flame_forge2d.dart';
 import '../components/base_platform.dart';
 import '../components/circle_shape.dart' show GameCircle;
 import '../components/ghost_shape.dart';
+import '../components/height_marker.dart';
 import '../components/square_shape.dart';
 import '../components/triangle_shape.dart';
 import 'constants.dart';
@@ -37,6 +38,14 @@ class StackingGame extends Forge2DGame with DragCallbacks {
 
   double _highestPoint = 0;
   double get highestPoint => _highestPoint;
+
+  // Time-based settling - height must be stable for 1 second to count
+  double _lastRecordedHeight = 0;
+  double _heightStableTime = 0;
+  bool _heightIsSettled = false;
+
+  // Height marker component
+  HeightMarker? _heightMarker;
 
   ShapeSize _selectedShapeSize = ShapeSize.medium;
   ShapeSize get selectedShapeSize => _selectedShapeSize;
@@ -106,6 +115,13 @@ class StackingGame extends Forge2DGame with DragCallbacks {
     // Initialize highest point to base level
     _highestPoint = _baseY;
 
+    // Add height marker (positioned at base level initially)
+    _heightMarker = HeightMarker(
+      lineWidth: 30.0, // Wide enough to be visible
+      position: Vector2(0, _baseY),
+    );
+    world.add(_heightMarker!);
+
     // Create the visible base platform
     _createBasePlatform();
 
@@ -166,7 +182,7 @@ class StackingGame extends Forge2DGame with DragCallbacks {
     if (!_isReady || _gameState != StackingGameState.playing) return;
 
     // Track highest point and update camera
-    _updateHighestPoint();
+    _updateHighestPoint(dt);
     _updateCamera(dt);
 
     // Apply magnetic attraction if enabled
@@ -233,7 +249,7 @@ class StackingGame extends Forge2DGame with DragCallbacks {
     }
   }
 
-  void _updateHighestPoint() {
+  void _updateHighestPoint(double dt) {
     double highest = _baseY;
 
     for (final child in world.children) {
@@ -252,12 +268,37 @@ class StackingGame extends Forge2DGame with DragCallbacks {
       }
     }
 
+    // Always update highest point for real-time display
     if (highest < _highestPoint) {
       _highestPoint = highest;
-      // Convert to positive height for display
-      final displayHeight = (_baseY - _highestPoint).abs();
-      onHeightChanged?.call(displayHeight);
     }
+
+    // Calculate current display height
+    final displayHeight = (_baseY - _highestPoint).abs();
+
+    // Update height marker visual
+    _heightMarker?.updateHeight(displayHeight);
+
+    // Time-based settling: check if height has changed significantly
+    if ((displayHeight - _lastRecordedHeight).abs() > GameConstants.heightChangeThreshold) {
+      // Height changed - reset stability timer
+      _lastRecordedHeight = displayHeight;
+      _heightStableTime = 0;
+      _heightIsSettled = false;
+    } else {
+      // Height stable - accumulate time
+      _heightStableTime += dt;
+
+      // After 1 second of stability, mark as settled
+      if (_heightStableTime >= GameConstants.settleTimeRequired && !_heightIsSettled) {
+        _heightIsSettled = true;
+        // Notify callback with settled height
+        onHeightChanged?.call(displayHeight);
+      }
+    }
+
+    // Always notify for real-time display updates
+    onHeightChanged?.call(displayHeight);
   }
 
   void _updateCamera(double dt) {
@@ -284,8 +325,8 @@ class StackingGame extends Forge2DGame with DragCallbacks {
   }
 
   void _checkForFallenShapes() {
-    // Check if any shape has fallen below the base platform
-    final threshold = _baseY + 5.0;
+    // Check if any shape has fallen below the floor (bottom of screen)
+    final threshold = GameConstants.floorThreshold;
 
     for (final child in world.children) {
       double shapeY = 0;

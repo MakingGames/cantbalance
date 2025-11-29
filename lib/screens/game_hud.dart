@@ -101,16 +101,19 @@ class GameHUD extends StatelessWidget {
                       indicators: leftIndicators,
                     ),
 
-                    // Center content
+                    // Center content (IgnorePointer to allow taps through to game)
                     if (centerContent != null)
                       Expanded(
-                        child: Center(child: centerContent),
+                        child: Center(
+                          child: IgnorePointer(child: centerContent),
+                        ),
                       )
                     else
                       const Spacer(),
 
-                    // Right side content
-                    if (rightContent != null) rightContent!,
+                    // Right side content (IgnorePointer to allow taps through to game)
+                    if (rightContent != null)
+                      IgnorePointer(child: rightContent!),
                   ],
                 ),
               ),

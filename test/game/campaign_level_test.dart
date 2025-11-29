@@ -204,5 +204,70 @@ void main() {
         expect(CampaignLevel.level40.targetHeight, 10.0);
       });
     });
+
+    group('settleTime', () {
+      test('tutorial levels (1-5) have base time of 1.5s', () {
+        // Tutorial levels have no hazards, so settleTime = 1.5
+        expect(CampaignLevel.level1.settleTime, 1.5);
+        expect(CampaignLevel.level2.settleTime, 1.5);
+        expect(CampaignLevel.level3.settleTime, 1.5);
+        expect(CampaignLevel.level4.settleTime, 1.5);
+        expect(CampaignLevel.level5.settleTime, 1.5);
+      });
+
+      test('non-tutorial levels without hazards have base time of 2.0s', () {
+        // Level 6-10 have auto-spawn but no hazards that affect settle time
+        expect(CampaignLevel.level6.settleTime, 2.0);
+        expect(CampaignLevel.level10.settleTime, 2.0);
+      });
+
+      test('wind hazard reduces settle time by 0.3s', () {
+        // Chapter 5 (wind) levels 21-25 have wind, base 2.0 - 0.3 = 1.7
+        expect(CampaignLevel.level21.settleTime, 1.7);
+        expect(CampaignLevel.level25.settleTime, 1.7);
+      });
+
+      test('beam instability reduces settle time by 0.3s', () {
+        // Chapter 6 (unstable ground) levels 26-30 have beam instability
+        // base 2.0 - 0.3 = 1.7
+        expect(CampaignLevel.level26.settleTime, 1.7);
+        expect(CampaignLevel.level30.settleTime, 1.7);
+      });
+
+      test('time pressure reduces settle time by 0.4s', () {
+        // Chapter 7 (time crunch) levels 31-35 have time pressure
+        // base 2.0 - 0.4 = 1.6
+        expect(CampaignLevel.level31.settleTime, 1.6);
+        expect(CampaignLevel.level35.settleTime, 1.6);
+      });
+
+      test('multiple hazards stack reductions', () {
+        // Level 40 has wind (-0.3), beam instability (-0.3), and time pressure (-0.4)
+        // base 2.0 - 0.3 - 0.3 - 0.4 = 1.0 (clamped minimum)
+        expect(CampaignLevel.level40.settleTime, 1.0);
+      });
+
+      test('settle time is clamped to minimum of 1.0s', () {
+        // Level 40 has all hazards: 2.0 - 0.3 - 0.3 - 0.4 = 1.0
+        // Even with all hazards, should not go below 1.0
+        expect(CampaignLevel.level40.settleTime, greaterThanOrEqualTo(1.0));
+      });
+
+      test('settle time is clamped to maximum of 2.5s', () {
+        for (final level in CampaignLevel.all) {
+          expect(level.settleTime, lessThanOrEqualTo(2.5),
+              reason: 'Level ${level.number} settle time should not exceed 2.5s');
+        }
+      });
+
+      test('all levels have valid settle times within bounds', () {
+        for (final level in CampaignLevel.all) {
+          expect(level.settleTime, greaterThanOrEqualTo(1.0),
+              reason: 'Level ${level.number} settle time should be >= 1.0s');
+          expect(level.settleTime, lessThanOrEqualTo(2.5),
+              reason: 'Level ${level.number} settle time should be <= 2.5s');
+        }
+      });
+    });
   });
 }

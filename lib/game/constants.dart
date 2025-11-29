@@ -17,6 +17,10 @@ class GameConstants {
   // Settling detection - shapes considered settled when velocity below this
   static const double settlingVelocityThreshold = 0.5;
 
+  // Time-based settling - height must be stable for this duration to count
+  static const double settleTimeRequired = 2.0; // 2 seconds of stability
+  static const double heightChangeThreshold = 0.1; // Minimum change to reset timer
+
   // Shapes - three sizes with different weights
   static const double shapeSmallSize = 1.5;
   static const double shapeMediumSize = 2.2;

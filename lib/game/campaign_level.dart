@@ -23,6 +23,23 @@ class CampaignLevel {
   final double? _beamDamping;
   final double? _beamFriction;
 
+  /// Settle time computed based on hazards - more hazards = shorter (easier) settle time
+  /// because hazards make it harder to maintain stable height
+  double get settleTime {
+    double base = 2.0;
+
+    // Tutorial levels (1-5) get easier time
+    if (number <= 5) base = 1.5;
+
+    // Hazard reductions - these make stability harder, so be more forgiving
+    if (hasWind) base -= 0.3;
+    if (hasBeamInstability) base -= 0.3;
+    if (hasTimePressure) base -= 0.4;
+
+    // Clamp to reasonable bounds
+    return base.clamp(1.0, 2.5);
+  }
+
   /// Beam angular damping - uses level override or global default
   double get beamDamping => _beamDamping ?? SandboxChallenges.defaultBeamDamping;
 

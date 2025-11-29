@@ -39,23 +39,23 @@ class _StackingGameScreenState extends State<StackingGameScreen> {
     _game = StackingGame(
       onGameOver: (score) {
         HapticFeedback.mediumImpact();
-        setState(() {
+        _safeSetState(() {
           _showGameOver = true;
           _score = score;
         });
       },
       onScoreChanged: (score) {
-        setState(() {
+        _safeSetState(() {
           _score = score;
         });
       },
       onHeightChanged: (height) {
-        setState(() {
+        _safeSetState(() {
           _height = height;
         });
       },
       onNextShapeChanged: (nextShape) {
-        setState(() {
+        _safeSetState(() {
           _nextShapeType = nextShape;
         });
       },
@@ -63,6 +63,14 @@ class _StackingGameScreenState extends State<StackingGameScreen> {
         HapticFeedback.lightImpact();
       },
     );
+  }
+
+  /// Safe setState that defers to post-frame if called during build
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(fn);
+    });
   }
 
   void _onShapeSizeChanged(ShapeSize size) {
