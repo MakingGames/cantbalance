@@ -7,6 +7,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../game/sandbox_game.dart';
 import '../game/sandbox_challenges.dart';
 import '../services/dev_mode_service.dart';
+import '../services/orientation_service.dart';
 import '../utils/colors.dart';
 import 'game_hud.dart';
 
@@ -33,7 +34,8 @@ class _SandboxGameScreenState extends State<SandboxGameScreen> {
 
   void _startAccelerometer() {
     _accelerometerSubscription = accelerometerEventStream().listen((event) {
-      _game.updateBeamFromTilt(event.x);
+      final tilt = OrientationService.instance.getAdjustedTilt(event.x, event.y);
+      _game.updateBeamFromTilt(tilt);
     });
   }
 

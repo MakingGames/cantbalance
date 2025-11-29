@@ -12,6 +12,9 @@ class SquareShape extends BodyComponent {
   final double linearDamping;
   final double angularDamping;
 
+  /// Tracks if this shape has ever had significant velocity (has fallen)
+  bool hasHadVelocity = false;
+
   SquareShape({
     required this.initialPosition,
     this.shapeSize = ShapeSize.medium,
@@ -19,6 +22,15 @@ class SquareShape extends BodyComponent {
     this.linearDamping = 0.0,
     this.angularDamping = 0.0,
   });
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    // Mark as having had velocity once it starts moving
+    if (!hasHadVelocity && body.linearVelocity.length > 1.0) {
+      hasHadVelocity = true;
+    }
+  }
 
   @override
   Body createBody() {

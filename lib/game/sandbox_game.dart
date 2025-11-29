@@ -14,6 +14,8 @@ import '../components/wind_indicator.dart';
 import 'constants.dart';
 import 'sandbox_challenges.dart';
 import 'shape_type.dart';
+import 'systems/beam_instability_system.dart';
+import 'systems/wind_system.dart';
 
 /// Sandbox mode: Tap anywhere to spawn shapes freely.
 /// No rules, no end state - just play with physics.
@@ -33,27 +35,39 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
   // Tilt control state
   double _lastTiltX = 0;
 
-  // Wind state
+  // Random for shape spawning
   final Random _random = Random();
-  double _timeSinceLastGust = 0;
-  double _nextGustInterval = 3.0;
-  double _currentWindForce = 0;
-  double _windGustTimer = 0;
-  bool _isWindActive = false;
-  bool _isWindWarning = false;
-  double _windWarningTimer = 0;
-  double _pendingWindDirection = 0;
-  double _pendingWindForce = 0;
 
-  // Beam instability state
-  double _beamNudgeTimer = 0;
-  double _nextNudgeInterval = 2.0;
+  // Wind system
+  late WindSystem _windSystem;
+
+  // Beam instability system
+  late BeamInstabilitySystem _beamInstabilitySystem;
 
   SandboxGame({this.onExit})
       : super(
           gravity: Vector2(0, GameConstants.gravityStart),
           zoom: GameConstants.zoom,
-        );
+        ) {
+    // Initialize wind system with sandbox-specific timing and callbacks
+    _windSystem = WindSystem(
+      gustIntervalMin: SandboxChallenges.windGustIntervalMin,
+      gustIntervalMax: SandboxChallenges.windGustIntervalMax,
+      gustDuration: SandboxChallenges.windGustDuration,
+      warningDuration: SandboxChallenges.windWarningDuration,
+      forceMin: SandboxChallenges.baseWindForceMin,
+      forceMax: SandboxChallenges.baseWindForceMax,
+      onWindChanged: (force, isActive) {
+        _windIndicator?.setWind(force, isActive);
+      },
+      onWindWarning: (direction) {
+        _windIndicator?.setWarning(direction);
+      },
+    );
+
+    // Initialize beam instability system
+    _beamInstabilitySystem = BeamInstabilitySystem();
+  }
 
   void updateChallenges(SandboxChallenges newChallenges) {
     final previousChallenges = _challenges;
@@ -84,6 +98,11 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
           ? newChallenges.beamDamping
           : SandboxChallenges.defaultBeamDamping;
       scaleBeam.setAngularDamping(damping);
+    }
+
+    // Update wind strength when slider changes
+    if (newChallenges.windStrength != previousChallenges.windStrength) {
+      _windSystem.windStrengthMultiplier = newChallenges.windStrength;
     }
   }
 
@@ -177,73 +196,22 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
   }
 
   void _updateWind(double dt) {
-    if (_isWindActive) {
-      // Apply wind force to all shapes
-      for (final child in world.children) {
-        if (child is SquareShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is GameCircle) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is TriangleShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        }
-      }
-
-      // Count down gust timer
-      _windGustTimer -= dt;
-      if (_windGustTimer <= 0) {
-        _isWindActive = false;
-        _currentWindForce = 0;
-        _windIndicator?.setWind(0, false);
-        // Set next gust interval
-        _nextGustInterval = SandboxChallenges.windGustIntervalMin +
-            _random.nextDouble() *
-                (SandboxChallenges.windGustIntervalMax - SandboxChallenges.windGustIntervalMin);
-      }
-    } else if (_isWindWarning) {
-      // Warning phase - count down then start wind
-      _windWarningTimer -= dt;
-      if (_windWarningTimer <= 0) {
-        _isWindWarning = false;
-        _isWindActive = true;
-        _windGustTimer = SandboxChallenges.windGustDuration;
-        _currentWindForce = _pendingWindForce;
-        _windIndicator?.setWind(_currentWindForce, true);
-      }
-    } else {
-      // Wait for next gust
-      _timeSinceLastGust += dt;
-      if (_timeSinceLastGust >= _nextGustInterval) {
-        // Start warning phase
-        _isWindWarning = true;
-        _timeSinceLastGust = 0;
-        _windWarningTimer = SandboxChallenges.windWarningDuration;
-
-        // Pre-calculate direction and force for after warning
-        _pendingWindDirection = _random.nextBool() ? 1.0 : -1.0;
-        final forceMagnitude = _challenges.windForceMin +
-            _random.nextDouble() *
-                (_challenges.windForceMax - _challenges.windForceMin);
-        _pendingWindForce = _pendingWindDirection * forceMagnitude;
-
-        // Show warning indicator
-        _windIndicator?.setWarning(_pendingWindDirection);
+    // Collect all shape bodies for wind to act upon
+    final shapeBodies = <Body>[];
+    for (final child in world.children) {
+      if (child is SquareShape) {
+        shapeBodies.add(child.body);
+      } else if (child is GameCircle) {
+        shapeBodies.add(child.body);
+      } else if (child is TriangleShape) {
+        shapeBodies.add(child.body);
       }
     }
+    _windSystem.update(dt, shapeBodies);
   }
 
   void _updateBeamInstability(double dt) {
-    _beamNudgeTimer += dt;
-    if (_beamNudgeTimer >= _nextNudgeInterval) {
-      _beamNudgeTimer = 0;
-      // Random interval for next nudge (1-3 seconds)
-      _nextNudgeInterval = 1.0 + _random.nextDouble() * 2.0;
-
-      // Apply a small random torque to the beam
-      final torqueDirection = _random.nextBool() ? 1.0 : -1.0;
-      final torqueMagnitude = 50.0 + _random.nextDouble() * 100.0;
-      scaleBeam.body.applyTorque(torqueDirection * torqueMagnitude);
-    }
+    _beamInstabilitySystem.update(dt, scaleBeam.body);
   }
 
   @override

@@ -10,6 +10,7 @@ import 'screens/stacking_game_screen.dart';
 import 'services/dev_mode_service.dart';
 import 'services/high_score_service.dart';
 import 'services/level_progress_service.dart';
+import 'services/orientation_service.dart';
 import 'services/theme_service.dart';
 import 'utils/colors.dart';
 
@@ -18,13 +19,11 @@ void main() async {
 
   // Initialize services
   final themeService = await ThemeService.getInstance();
-  await DevModeService.instance.init();
+  await DevModeService.getInstance();
+  await OrientationService.getInstance();
 
-  // Lock to portrait orientation
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // Lock to preferred orientation (default portrait, can be changed in menu)
+  await OrientationService.instance.lockOrientation();
 
   runApp(CantApp(themeService: themeService));
 }
@@ -86,16 +85,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   void initState() {
     super.initState();
     _loadData();
-    // Listen to theme and dev mode changes
+    // Listen to service changes
     ThemeService.instance.addListener(_onStateChanged);
     DevModeService.instance.addListener(_onStateChanged);
+    OrientationService.instance.addListener(_onOrientationChanged);
   }
 
   @override
   void dispose() {
     ThemeService.instance.removeListener(_onStateChanged);
     DevModeService.instance.removeListener(_onStateChanged);
+    OrientationService.instance.removeListener(_onOrientationChanged);
     super.dispose();
+  }
+
+  void _onOrientationChanged() {
+    // Lock to new orientation and rebuild
+    OrientationService.instance.lockOrientation();
+    setState(() {});
   }
 
   void _onStateChanged() {
@@ -140,10 +147,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       campaignStars: _campaignStars,
       totalCampaignLevels: CampaignLevel.all.length,
       isDarkMode: ThemeService.instance.isDarkMode,
+      isLandscape: OrientationService.instance.isLandscape,
       isDevMode: DevModeService.instance.isDevMode,
       onLogoTap: _onLogoTap,
       onThemeToggle: () {
         ThemeService.instance.toggleTheme();
+      },
+      onOrientationToggle: () {
+        OrientationService.instance.toggleOrientation();
       },
       onChallengePressed: () async {
         await Navigator.of(context).push(

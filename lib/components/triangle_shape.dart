@@ -13,6 +13,9 @@ class TriangleShape extends BodyComponent {
   final double linearDamping;
   final double angularDamping;
 
+  /// Tracks if this shape has ever had significant velocity (has fallen)
+  bool hasHadVelocity = false;
+
   TriangleShape({
     required this.initialPosition,
     this.shapeSize = ShapeSize.medium,
@@ -20,6 +23,15 @@ class TriangleShape extends BodyComponent {
     this.linearDamping = 0.0,
     this.angularDamping = 0.0,
   });
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    // Mark as having had velocity once it starts moving
+    if (!hasHadVelocity && body.linearVelocity.length > 1.0) {
+      hasHadVelocity = true;
+    }
+  }
 
   @override
   Body createBody() {

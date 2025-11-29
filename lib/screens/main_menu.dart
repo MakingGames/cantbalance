@@ -7,8 +7,10 @@ class MainMenu extends StatelessWidget {
   final VoidCallback onCampaignPressed;
   final VoidCallback onStackingPressed;
   final VoidCallback onThemeToggle;
+  final VoidCallback onOrientationToggle;
   final VoidCallback? onLogoTap;
   final bool isDarkMode;
+  final bool isLandscape;
   final bool isDevMode;
   final int highScore;
   final int campaignStars;
@@ -21,8 +23,10 @@ class MainMenu extends StatelessWidget {
     required this.onCampaignPressed,
     required this.onStackingPressed,
     required this.onThemeToggle,
+    required this.onOrientationToggle,
     this.onLogoTap,
     required this.isDarkMode,
+    this.isLandscape = false,
     this.isDevMode = false,
     this.highScore = 0,
     this.campaignStars = 0,
@@ -156,17 +160,32 @@ class MainMenu extends StatelessWidget {
                 ],
               ),
             ),
-            // Theme toggle button in top-right corner
+            // Settings buttons in top-right corner
             Positioned(
               top: 16,
               right: 16,
-              child: IconButton(
-                onPressed: onThemeToggle,
-                icon: Icon(
-                  isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color: GameColors.beam.withValues(alpha: 0.5),
-                  size: 24,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Orientation toggle
+                  IconButton(
+                    onPressed: onOrientationToggle,
+                    icon: Icon(
+                      isLandscape ? Icons.stay_current_landscape : Icons.stay_current_portrait,
+                      color: GameColors.beam.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                  ),
+                  // Theme toggle
+                  IconButton(
+                    onPressed: onThemeToggle,
+                    icon: Icon(
+                      isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                      color: GameColors.beam.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

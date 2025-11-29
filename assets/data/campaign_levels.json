@@ -1,0 +1,431 @@
+{
+  "levels": [
+    {
+      "number": 1,
+      "name": "First Steps",
+      "description": "Stack to 3 units high",
+      "targetHeight": 3.0,
+      "chapter": 1
+    },
+    {
+      "number": 2,
+      "name": "Finding Balance",
+      "description": "Stack to 4 units high",
+      "targetHeight": 4.0,
+      "chapter": 1
+    },
+    {
+      "number": 3,
+      "name": "Steady Hands",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 1
+    },
+    {
+      "number": 4,
+      "name": "Building Higher",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 1
+    },
+    {
+      "number": 5,
+      "name": "Balance Master",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 1
+    },
+    {
+      "number": 6,
+      "name": "First Rain",
+      "description": "Stack to 4 units as shapes fall",
+      "targetHeight": 4.0,
+      "chapter": 2,
+      "hasAutoSpawn": true,
+      "spawnInterval": 8.0
+    },
+    {
+      "number": 7,
+      "name": "Light Drizzle",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 2,
+      "hasAutoSpawn": true,
+      "spawnInterval": 6.0
+    },
+    {
+      "number": 8,
+      "name": "Steady Rain",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 2,
+      "hasAutoSpawn": true,
+      "spawnInterval": 5.0
+    },
+    {
+      "number": 9,
+      "name": "Downpour",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 2,
+      "hasAutoSpawn": true,
+      "spawnInterval": 4.0
+    },
+    {
+      "number": 10,
+      "name": "Torrential Tower",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 2,
+      "hasAutoSpawn": true,
+      "spawnInterval": 4.0
+    },
+    {
+      "number": 11,
+      "name": "Weighty Matters",
+      "description": "Stack to 4 units with heavy gravity",
+      "targetHeight": 4.0,
+      "chapter": 3,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "spawnInterval": 6.0,
+      "gravityY": 12.0
+    },
+    {
+      "number": 12,
+      "name": "Heavy Burden",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 3,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "spawnInterval": 5.0,
+      "gravityY": 13.0
+    },
+    {
+      "number": 13,
+      "name": "Crushing Weight",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 3,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "spawnInterval": 4.5,
+      "gravityY": 14.0
+    },
+    {
+      "number": 14,
+      "name": "Dense Atmosphere",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 3,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "spawnInterval": 4.0,
+      "gravityY": 15.0
+    },
+    {
+      "number": 15,
+      "name": "Jupiter's Pull",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 3,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "spawnInterval": 3.5,
+      "gravityY": 16.0
+    },
+    {
+      "number": 16,
+      "name": "Rolling In",
+      "description": "Stack to 4 units with varied shapes",
+      "targetHeight": 4.0,
+      "chapter": 4,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "spawnInterval": 6.0
+    },
+    {
+      "number": 17,
+      "name": "Mixed Bag",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 4,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "spawnInterval": 5.0
+    },
+    {
+      "number": 18,
+      "name": "Shape Shifter",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 4,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "spawnInterval": 4.5
+    },
+    {
+      "number": 19,
+      "name": "Geometry Class",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 4,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "spawnInterval": 4.0
+    },
+    {
+      "number": 20,
+      "name": "Shape Master",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 4,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "spawnInterval": 3.5
+    },
+    {
+      "number": 21,
+      "name": "Light Breeze",
+      "description": "Stack to 4 units in the wind",
+      "targetHeight": 4.0,
+      "chapter": 5,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 6.0
+    },
+    {
+      "number": 22,
+      "name": "Gusty Day",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 5,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 5.0
+    },
+    {
+      "number": 23,
+      "name": "Strong Winds",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 5,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 4.5
+    },
+    {
+      "number": 24,
+      "name": "Gale Force",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 5,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 4.0
+    },
+    {
+      "number": 25,
+      "name": "Hurricane",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 5,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 3.5
+    },
+    {
+      "number": 26,
+      "name": "Slippery Surface",
+      "description": "Stack to 4 units on unstable beam",
+      "targetHeight": 4.0,
+      "chapter": 6,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 6.0,
+      "beamFriction": 0.3
+    },
+    {
+      "number": 27,
+      "name": "Shaky Ground",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 6,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 5.0,
+      "beamFriction": 0.3
+    },
+    {
+      "number": 28,
+      "name": "Tremors",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 6,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 4.5,
+      "beamFriction": 0.25
+    },
+    {
+      "number": 29,
+      "name": "Earthquake",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 6,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 4.0,
+      "beamFriction": 0.2
+    },
+    {
+      "number": 30,
+      "name": "Fault Line",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 6,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 3.5,
+      "beamFriction": 0.2
+    },
+    {
+      "number": 31,
+      "name": "Tick Tock",
+      "description": "Stack to 4 units before time runs out",
+      "targetHeight": 4.0,
+      "chapter": 7,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasTimePressure": true,
+      "spawnInterval": 6.0
+    },
+    {
+      "number": 32,
+      "name": "Racing Clock",
+      "description": "Stack to 5 units high",
+      "targetHeight": 5.0,
+      "chapter": 7,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasTimePressure": true,
+      "spawnInterval": 5.0
+    },
+    {
+      "number": 33,
+      "name": "Time Trial",
+      "description": "Stack to 6 units high",
+      "targetHeight": 6.0,
+      "chapter": 7,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasTimePressure": true,
+      "spawnInterval": 4.5
+    },
+    {
+      "number": 34,
+      "name": "Speed Run",
+      "description": "Stack to 7 units high",
+      "targetHeight": 7.0,
+      "chapter": 7,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasTimePressure": true,
+      "spawnInterval": 4.0
+    },
+    {
+      "number": 35,
+      "name": "Time Master",
+      "description": "Stack to 8 units high",
+      "targetHeight": 8.0,
+      "chapter": 7,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasTimePressure": true,
+      "spawnInterval": 3.5
+    },
+    {
+      "number": 36,
+      "name": "Heavy Storm",
+      "description": "Stack to 6 units with gravity + wind",
+      "targetHeight": 6.0,
+      "chapter": 8,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "spawnInterval": 4.5,
+      "gravityY": 14.0
+    },
+    {
+      "number": 37,
+      "name": "Chaos Theory",
+      "description": "Stack to 7 units with wind + instability",
+      "targetHeight": 7.0,
+      "chapter": 8,
+      "hasAutoSpawn": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 4.0,
+      "beamFriction": 0.3
+    },
+    {
+      "number": 38,
+      "name": "Perfect Storm",
+      "description": "Stack to 8 units with all elements",
+      "targetHeight": 8.0,
+      "chapter": 8,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 3.5,
+      "gravityY": 14.0,
+      "beamFriction": 0.25
+    },
+    {
+      "number": 39,
+      "name": "Against All Odds",
+      "description": "Stack to 9 units high",
+      "targetHeight": 9.0,
+      "chapter": 8,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "hasBeamInstability": true,
+      "spawnInterval": 3.0,
+      "gravityY": 15.0,
+      "beamFriction": 0.2
+    },
+    {
+      "number": 40,
+      "name": "The Final Balance",
+      "description": "Stack to 10 units - master all mechanics",
+      "targetHeight": 10.0,
+      "chapter": 8,
+      "hasAutoSpawn": true,
+      "hasIncreasedGravity": true,
+      "hasShapeVariety": true,
+      "hasWind": true,
+      "hasBeamInstability": true,
+      "hasTimePressure": true,
+      "spawnInterval": 2.5,
+      "gravityY": 16.0,
+      "beamFriction": 0.2
+    }
+  ]
+}

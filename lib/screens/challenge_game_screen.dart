@@ -9,6 +9,7 @@ import '../game/challenge_game.dart';
 import '../game/game_level.dart';
 import '../game/shape_size.dart';
 import '../services/high_score_service.dart';
+import '../services/orientation_service.dart';
 import '../services/tutorial_service.dart';
 import '../utils/colors.dart';
 import 'game_over_overlay.dart';
@@ -60,9 +61,9 @@ class _ChallengeGameScreenState extends State<ChallengeGameScreen> {
 
   void _startAccelerometer() {
     _accelerometerSubscription = accelerometerEventStream().listen((event) {
-      // event.x: tilt left/right (negative = tilted left)
-      // Pass to game to tilt the beam
-      _game.updateBeamFromTilt(event.x);
+      // Get adjusted tilt based on orientation (portrait uses X, landscape uses Y)
+      final tilt = OrientationService.instance.getAdjustedTilt(event.x, event.y);
+      _game.updateBeamFromTilt(tilt);
     });
   }
 

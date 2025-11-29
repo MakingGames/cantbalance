@@ -16,6 +16,8 @@ import 'constants.dart';
 import 'game_level.dart';
 import 'shape_size.dart';
 import 'shape_type.dart';
+import 'systems/beam_instability_system.dart';
+import 'systems/wind_system.dart';
 
 enum GameState { playing, gameOver }
 
@@ -90,20 +92,11 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   // Track last tilt value for gravity updates
   double _lastTiltX = 0;
 
-  // Wind state (Level 5+)
-  double _timeSinceLastGust = 0;
-  double _nextGustInterval = 3.0;
-  double _currentWindForce = 0;
-  double _windGustTimer = 0;
-  bool _isWindActive = false;
-  bool _isWindWarning = false;
-  double _windWarningTimer = 0;
-  double _pendingWindDirection = 0;
-  double _pendingWindForce = 0;
+  // Wind system (Level 5+)
+  late WindSystem _windSystem;
 
-  // Beam instability state (Level 6+)
-  double _beamNudgeTimer = 0;
-  double _nextNudgeInterval = 2.0;
+  // Beam instability system (Level 6+)
+  late BeamInstabilitySystem _beamInstabilitySystem;
 
   // Time pressure state (Level 7+)
   double _placementTimer = 0;
@@ -174,7 +167,20 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
       : super(
           gravity: GameConstants.gravity,
           zoom: GameConstants.zoom,
-        );
+        ) {
+    // Initialize wind system with callbacks for UI updates
+    _windSystem = WindSystem(
+      onWindChanged: (force, isActive) {
+        _windIndicator?.setWind(force, isActive);
+      },
+      onWindWarning: (direction) {
+        _windIndicator?.setWarning(direction);
+      },
+    );
+
+    // Initialize beam instability system
+    _beamInstabilitySystem = BeamInstabilitySystem();
+  }
 
   @override
   Future<void> onLoad() async {
@@ -337,73 +343,22 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   }
 
   void _updateWind(double dt) {
-    if (_isWindActive) {
-      // Apply wind force to all shapes
-      for (final child in world.children) {
-        if (child is SquareShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is GameCircle) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is TriangleShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        }
-      }
-
-      // Count down gust timer
-      _windGustTimer -= dt;
-      if (_windGustTimer <= 0) {
-        _isWindActive = false;
-        _currentWindForce = 0;
-        _windIndicator?.setWind(0, false);
-        // Set next gust interval
-        _nextGustInterval = GameConstants.windGustIntervalMin +
-            _random.nextDouble() *
-                (GameConstants.windGustIntervalMax - GameConstants.windGustIntervalMin);
-      }
-    } else if (_isWindWarning) {
-      // Warning phase - count down then start wind
-      _windWarningTimer -= dt;
-      if (_windWarningTimer <= 0) {
-        _isWindWarning = false;
-        _isWindActive = true;
-        _windGustTimer = GameConstants.windGustDuration;
-        _currentWindForce = _pendingWindForce;
-        _windIndicator?.setWind(_currentWindForce, true);
-      }
-    } else {
-      // Wait for next gust
-      _timeSinceLastGust += dt;
-      if (_timeSinceLastGust >= _nextGustInterval) {
-        // Start warning phase
-        _isWindWarning = true;
-        _timeSinceLastGust = 0;
-        _windWarningTimer = GameConstants.windWarningDuration;
-
-        // Pre-calculate direction and force for after warning
-        _pendingWindDirection = _random.nextBool() ? 1.0 : -1.0;
-        final forceMagnitude = GameConstants.windForceMin +
-            _random.nextDouble() *
-                (GameConstants.windForceMax - GameConstants.windForceMin);
-        _pendingWindForce = _pendingWindDirection * forceMagnitude;
-
-        // Show warning indicator
-        _windIndicator?.setWarning(_pendingWindDirection);
+    // Collect all shape bodies for wind to act upon
+    final shapeBodies = <Body>[];
+    for (final child in world.children) {
+      if (child is SquareShape) {
+        shapeBodies.add(child.body);
+      } else if (child is GameCircle) {
+        shapeBodies.add(child.body);
+      } else if (child is TriangleShape) {
+        shapeBodies.add(child.body);
       }
     }
+    _windSystem.update(dt, shapeBodies);
   }
 
   void _updateBeamInstability(double dt) {
-    _beamNudgeTimer += dt;
-    if (_beamNudgeTimer >= _nextNudgeInterval) {
-      _beamNudgeTimer = 0;
-      // Random interval for next nudge (1-3 seconds)
-      _nextNudgeInterval = 1.0 + _random.nextDouble() * 2.0;
-
-      // Apply a small random torque to the beam
-      final torqueDirection = _random.nextBool() ? 1.0 : -1.0;
-      final torqueMagnitude = 50.0 + _random.nextDouble() * 100.0;
-      scaleBeam.body.applyTorque(torqueDirection * torqueMagnitude);
-    }
+    _beamInstabilitySystem.update(dt, scaleBeam.body);
   }
 
   void _triggerGameOver(double finalAngle) {

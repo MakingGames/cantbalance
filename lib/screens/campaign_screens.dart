@@ -10,6 +10,7 @@ import '../game/campaign_game.dart';
 import '../game/campaign_level.dart';
 import '../game/shape_size.dart';
 import '../services/level_progress_service.dart';
+import '../services/orientation_service.dart';
 import '../utils/colors.dart';
 import 'game_hud.dart';
 import 'level_complete_overlay.dart';
@@ -93,7 +94,8 @@ class _CampaignLevelScreenState extends State<CampaignLevelScreen> {
 
   void _startAccelerometer() {
     _accelerometerSubscription = accelerometerEventStream().listen((event) {
-      _game.updateBeamFromTilt(event.x);
+      final tilt = OrientationService.instance.getAdjustedTilt(event.x, event.y);
+      _game.updateBeamFromTilt(tilt);
     });
   }
 

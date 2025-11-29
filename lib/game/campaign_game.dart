@@ -15,6 +15,8 @@ import 'campaign_level.dart';
 import 'constants.dart';
 import 'shape_size.dart';
 import 'shape_type.dart';
+import 'systems/beam_instability_system.dart';
+import 'systems/wind_system.dart';
 
 enum CampaignGameState { playing, won, lost }
 
@@ -58,20 +60,11 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
   // Track last tilt value for gravity updates
   double _lastTiltX = 0;
 
-  // Wind state
-  double _timeSinceLastGust = 0;
-  double _nextGustInterval = 3.0;
-  double _currentWindForce = 0;
-  double _windGustTimer = 0;
-  bool _isWindActive = false;
-  bool _isWindWarning = false;
-  double _windWarningTimer = 0;
-  double _pendingWindDirection = 0;
-  double _pendingWindForce = 0;
+  // Wind system
+  late WindSystem _windSystem;
 
-  // Beam instability state
-  double _beamNudgeTimer = 0;
-  double _nextNudgeInterval = 2.0;
+  // Beam instability system
+  late BeamInstabilitySystem _beamInstabilitySystem;
 
   // Time pressure state
   double _placementTimer = 0;
@@ -108,8 +101,8 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
   final VoidCallback? onExit;
 
   // Expose wind state for UI
-  bool get isWindActive => _isWindActive;
-  double get currentWindDirection => _currentWindForce > 0 ? 1.0 : (_currentWindForce < 0 ? -1.0 : 0);
+  bool get isWindActive => _windSystem.isActive;
+  double get currentWindDirection => _windSystem.direction;
 
   void selectShapeSize(ShapeSize size) {
     _selectedShapeSize = size;
@@ -129,7 +122,21 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
   }) : super(
           gravity: Vector2(0, level.gravityY),
           zoom: GameConstants.zoom,
-        );
+        ) {
+    // Initialize wind system with callback for UI updates
+    _windSystem = WindSystem(
+      onWindChanged: (force, isActive) {
+        final direction = force > 0 ? 1.0 : (force < 0 ? -1.0 : 0.0);
+        onWindChanged?.call(isActive, false, direction);
+      },
+      onWindWarning: (direction) {
+        onWindChanged?.call(false, true, direction);
+      },
+    );
+
+    // Initialize beam instability system
+    _beamInstabilitySystem = BeamInstabilitySystem();
+  }
 
   @override
   Future<void> onLoad() async {
@@ -303,73 +310,22 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
   }
 
   void _updateWind(double dt) {
-    if (_isWindActive) {
-      // Apply wind force to all shapes
-      for (final child in world.children) {
-        if (child is SquareShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is GameCircle) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        } else if (child is TriangleShape) {
-          child.body.applyForce(Vector2(_currentWindForce, 0));
-        }
-      }
-
-      // Count down gust timer
-      _windGustTimer -= dt;
-      if (_windGustTimer <= 0) {
-        _isWindActive = false;
-        _currentWindForce = 0;
-        onWindChanged?.call(false, false, 0);
-        // Set next gust interval
-        _nextGustInterval = GameConstants.windGustIntervalMin +
-            _random.nextDouble() *
-                (GameConstants.windGustIntervalMax - GameConstants.windGustIntervalMin);
-      }
-    } else if (_isWindWarning) {
-      // Warning phase - count down then start wind
-      _windWarningTimer -= dt;
-      if (_windWarningTimer <= 0) {
-        _isWindWarning = false;
-        _isWindActive = true;
-        _windGustTimer = GameConstants.windGustDuration;
-        _currentWindForce = _pendingWindForce;
-        onWindChanged?.call(true, false, _pendingWindDirection);
-      }
-    } else {
-      // Wait for next gust
-      _timeSinceLastGust += dt;
-      if (_timeSinceLastGust >= _nextGustInterval) {
-        // Start warning phase
-        _isWindWarning = true;
-        _timeSinceLastGust = 0;
-        _windWarningTimer = GameConstants.windWarningDuration;
-
-        // Pre-calculate direction and force for after warning
-        _pendingWindDirection = _random.nextBool() ? 1.0 : -1.0;
-        final forceMagnitude = GameConstants.windForceMin +
-            _random.nextDouble() *
-                (GameConstants.windForceMax - GameConstants.windForceMin);
-        _pendingWindForce = _pendingWindDirection * forceMagnitude;
-
-        // Show warning indicator via callback
-        onWindChanged?.call(false, true, _pendingWindDirection);
+    // Collect all shape bodies for wind to act upon
+    final shapeBodies = <Body>[];
+    for (final child in world.children) {
+      if (child is SquareShape) {
+        shapeBodies.add(child.body);
+      } else if (child is GameCircle) {
+        shapeBodies.add(child.body);
+      } else if (child is TriangleShape) {
+        shapeBodies.add(child.body);
       }
     }
+    _windSystem.update(dt, shapeBodies);
   }
 
   void _updateBeamInstability(double dt) {
-    _beamNudgeTimer += dt;
-    if (_beamNudgeTimer >= _nextNudgeInterval) {
-      _beamNudgeTimer = 0;
-      // Random interval for next nudge (1-3 seconds)
-      _nextNudgeInterval = 1.0 + _random.nextDouble() * 2.0;
-
-      // Apply a small random torque to the beam
-      final torqueDirection = _random.nextBool() ? 1.0 : -1.0;
-      final torqueMagnitude = 50.0 + _random.nextDouble() * 100.0;
-      scaleBeam.body.applyTorque(torqueDirection * torqueMagnitude);
-    }
+    _beamInstabilitySystem.update(dt, scaleBeam.body);
   }
 
   void _triggerLoss(double finalAngle) {
@@ -426,7 +382,7 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
     return true;
   }
 
-  /// Calculate current stack height (distance from beam surface to top of highest shape)
+  /// Calculate current stack height (distance from beam surface to top of highest settled shape)
   double _calculateCurrentHeight() {
     // Beam surface is at _beamY - beamHeight/2 (top of beam)
     final beamSurface = _beamY - GameConstants.beamHeight / 2;
@@ -434,20 +390,32 @@ class CampaignGame extends Forge2DGame with DragCallbacks {
 
     for (final child in world.children) {
       double shapeTop = beamSurface;
+      bool isSettled = false;
 
       if (child is SquareShape) {
-        // Top of square = center.y - half size
-        shapeTop = child.body.position.y - child.shapeSize.size / 2;
+        // Only count shapes that have fallen AND are now settled
+        if (child.hasHadVelocity &&
+            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
+          shapeTop = child.body.position.y - child.shapeSize.size / 2;
+          isSettled = true;
+        }
       } else if (child is GameCircle) {
-        // Top of circle = center.y - radius
-        shapeTop = child.body.position.y - child.shapeSize.size / 2;
+        if (child.hasHadVelocity &&
+            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
+          shapeTop = child.body.position.y - child.shapeSize.size / 2;
+          isSettled = true;
+        }
       } else if (child is TriangleShape) {
-        // Top of triangle = center.y - half height (approximate)
-        shapeTop = child.body.position.y - child.shapeSize.size / 2;
+        if (child.hasHadVelocity &&
+            child.body.linearVelocity.length <= GameConstants.settlingVelocityThreshold) {
+          shapeTop = child.body.position.y - child.shapeSize.size / 2;
+          isSettled = true;
+        }
       }
 
       // Lower y = higher position (y increases downward)
-      if (shapeTop < highestPoint) {
+      // Only update if this shape is settled
+      if (isSettled && shapeTop < highestPoint) {
         highestPoint = shapeTop;
       }
     }

@@ -29,6 +29,12 @@ class ThemeService extends ChangeNotifier {
     return _instance!;
   }
 
+  /// Reset singleton for testing - forces re-initialization
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance = null;
+  }
+
   Future<void> _init() async {
     _prefs = await SharedPreferences.getInstance();
     final savedTheme = _prefs.getString(_themeKey);

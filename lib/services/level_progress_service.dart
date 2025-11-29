@@ -14,11 +14,18 @@ class LevelProgressService {
 
   static LevelProgressService? _instance;
 
+  /// Get the singleton instance asynchronously (initializes if needed)
   static Future<LevelProgressService> getInstance() async {
     if (_instance == null) {
       final prefs = await SharedPreferences.getInstance();
       _instance = LevelProgressService._(prefs);
     }
+    return _instance!;
+  }
+
+  /// Get the singleton instance synchronously (must call getInstance first)
+  static LevelProgressService get instance {
+    assert(_instance != null, 'LevelProgressService not initialized. Call getInstance() first.');
     return _instance!;
   }
 
