@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HighScoreService {
@@ -11,6 +12,13 @@ class HighScoreService {
     _instance ??= HighScoreService._();
     _prefs ??= await SharedPreferences.getInstance();
     return _instance!;
+  }
+
+  /// Reset singleton for testing - forces re-initialization
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance = null;
+    _prefs = null;
   }
 
   int get highScore => _prefs?.getInt(_key) ?? 0;

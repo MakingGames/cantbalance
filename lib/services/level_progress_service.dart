@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../game/campaign_level.dart';
 
@@ -19,6 +20,12 @@ class LevelProgressService {
       _instance = LevelProgressService._(prefs);
     }
     return _instance!;
+  }
+
+  /// Reset singleton for testing - forces re-initialization
+  @visibleForTesting
+  static void resetForTesting() {
+    _instance = null;
   }
 
   /// Get the highest unlocked level number (1-indexed)
