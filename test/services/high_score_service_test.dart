@@ -17,6 +17,14 @@ void main() {
       expect(service.highScore, 0);
     });
 
+    test('synchronous instance getter works after initialization', () async {
+      SharedPreferences.setMockInitialValues({});
+      final asyncInstance = await HighScoreService.getInstance();
+      final syncInstance = HighScoreService.instance;
+
+      expect(identical(asyncInstance, syncInstance), true);
+    });
+
     test('returns stored high score', () async {
       SharedPreferences.setMockInitialValues({'high_score': 42});
       // Force new instance by resetting singleton (for testing)

@@ -13,6 +13,24 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
+    group('initialization', () {
+      test('getInstance returns same instance on subsequent calls', () async {
+        SharedPreferences.setMockInitialValues({});
+        final service1 = await LevelProgressService.getInstance();
+        final service2 = await LevelProgressService.getInstance();
+
+        expect(identical(service1, service2), true);
+      });
+
+      test('synchronous instance getter works after initialization', () async {
+        SharedPreferences.setMockInitialValues({});
+        final asyncInstance = await LevelProgressService.getInstance();
+        final syncInstance = LevelProgressService.instance;
+
+        expect(identical(asyncInstance, syncInstance), true);
+      });
+    });
+
     group('highestUnlockedLevel', () {
       test('returns 1 when no progress exists', () async {
         SharedPreferences.setMockInitialValues({});

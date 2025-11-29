@@ -209,6 +209,30 @@ void main() {
         final errors = loader.validateLevels();
         expect(errors, isEmpty);
       });
+
+      test('validateLevels returns error when levels not loaded', () {
+        final loader = CampaignLevelLoader.instance;
+
+        final errors = loader.validateLevels();
+        expect(errors, contains('Levels not loaded'));
+      });
+
+      test('getLevelByNumber returns null when levels not loaded', () {
+        final loader = CampaignLevelLoader.instance;
+
+        expect(loader.getLevelByNumber(1), isNull);
+      });
+
+      test('resetForTesting clears levels cache', () async {
+        final loader = CampaignLevelLoader.instance;
+        await loader.loadLevels();
+        expect(loader.isLoaded, true);
+
+        CampaignLevelLoader.resetForTesting();
+
+        final newLoader = CampaignLevelLoader.instance;
+        expect(newLoader.isLoaded, false);
+      });
     });
   });
 }

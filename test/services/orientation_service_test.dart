@@ -1,8 +1,11 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cant/services/orientation_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('OrientationService', () {
     setUp(() {
       OrientationService.resetForTesting();
@@ -124,6 +127,70 @@ void main() {
         await service.toggleOrientation();
 
         expect(service.orientation, GameOrientation.portrait);
+      });
+    });
+
+    group('lockOrientation', () {
+      test('locks to landscape orientations when in landscape mode', () async {
+        SharedPreferences.setMockInitialValues({'game_orientation': 'landscape'});
+        final service = await OrientationService.getInstance();
+
+        // Mock the platform channel
+        final List<List<String>> capturedOrientations = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'SystemChrome.setPreferredOrientations') {
+            capturedOrientations.add(List<String>.from(call.arguments as List));
+          }
+          return null;
+        });
+
+        await service.lockOrientation();
+
+        expect(capturedOrientations.last, contains('DeviceOrientation.landscapeLeft'));
+        expect(capturedOrientations.last, contains('DeviceOrientation.landscapeRight'));
+      });
+
+      test('locks to portrait orientations when in portrait mode', () async {
+        SharedPreferences.setMockInitialValues({'game_orientation': 'portrait'});
+        final service = await OrientationService.getInstance();
+
+        final List<List<String>> capturedOrientations = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'SystemChrome.setPreferredOrientations') {
+            capturedOrientations.add(List<String>.from(call.arguments as List));
+          }
+          return null;
+        });
+
+        await service.lockOrientation();
+
+        expect(capturedOrientations.last, contains('DeviceOrientation.portraitUp'));
+        expect(capturedOrientations.last, contains('DeviceOrientation.portraitDown'));
+      });
+    });
+
+    group('unlockOrientation', () {
+      test('unlocks to all orientations', () async {
+        SharedPreferences.setMockInitialValues({});
+        final service = await OrientationService.getInstance();
+
+        final List<List<String>> capturedOrientations = [];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'SystemChrome.setPreferredOrientations') {
+            capturedOrientations.add(List<String>.from(call.arguments as List));
+          }
+          return null;
+        });
+
+        await service.unlockOrientation();
+
+        expect(capturedOrientations.last, contains('DeviceOrientation.portraitUp'));
+        expect(capturedOrientations.last, contains('DeviceOrientation.portraitDown'));
+        expect(capturedOrientations.last, contains('DeviceOrientation.landscapeLeft'));
+        expect(capturedOrientations.last, contains('DeviceOrientation.landscapeRight'));
       });
     });
 

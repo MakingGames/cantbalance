@@ -25,6 +25,14 @@ void main() {
 
         expect(identical(service1, service2), true);
       });
+
+      test('synchronous instance getter works after initialization', () async {
+        SharedPreferences.setMockInitialValues({});
+        final asyncInstance = await TutorialService.getInstance();
+        final syncInstance = TutorialService.instance;
+
+        expect(identical(asyncInstance, syncInstance), true);
+      });
     });
 
     group('hasSeenTutorial', () {
