@@ -12,11 +12,15 @@ class GameConstants {
   static const double beamDensity = 2.0; // Heavier beam for stability
   static double get beamFriction => SandboxChallenges.defaultBeamFriction;
   static const double beamRestitution = 0.1;
+  static double get beamAngularDamping => SandboxChallenges.defaultBeamDamping;
+
+  // Settling detection - shapes considered settled when velocity below this
+  static const double settlingVelocityThreshold = 0.5;
 
   // Shapes - three sizes with different weights
-  static const double shapeSmallSize = 1.0;
-  static const double shapeMediumSize = 1.5;
-  static const double shapeLargeSize = 2.2;
+  static const double shapeSmallSize = 1.5;
+  static const double shapeMediumSize = 2.2;
+  static const double shapeLargeSize = 3.0;
 
   static const double shapeSmallDensity = 0.8;
   static const double shapeMediumDensity = 1.0;
@@ -58,6 +62,7 @@ class GameConstants {
   static double get windForceMin => SandboxChallenges.baseWindForceMin;
   static double get windForceMax => SandboxChallenges.baseWindForceMax;
   static double get windGustDuration => SandboxChallenges.windGustDuration;
+  static double get windWarningDuration => SandboxChallenges.windWarningDuration;
 
   // Beam instability settings (Level 6+)
   static const double beamSlipperyFriction = 0.3; // reduced friction when slippery

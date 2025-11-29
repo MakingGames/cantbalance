@@ -10,6 +10,7 @@ import '../components/scale_beam.dart';
 import '../components/square_shape.dart';
 import '../components/triangle_shape.dart';
 import '../components/walls.dart';
+import '../components/wind_indicator.dart';
 import 'constants.dart';
 import 'sandbox_challenges.dart';
 import 'shape_type.dart';
@@ -21,6 +22,7 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
   late ScaleBeam scaleBeam;
   late Fulcrum fulcrum;
   late Body anchorBody;
+  WindIndicator? _windIndicator;
 
   final VoidCallback? onExit;
 
@@ -38,6 +40,10 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
   double _currentWindForce = 0;
   double _windGustTimer = 0;
   bool _isWindActive = false;
+  bool _isWindWarning = false;
+  double _windWarningTimer = 0;
+  double _pendingWindDirection = 0;
+  double _pendingWindForce = 0;
 
   // Beam instability state
   double _beamNudgeTimer = 0;
@@ -104,6 +110,15 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
 
     // Add invisible walls
     world.add(Walls(screenWidth: size.x, screenHeight: size.y));
+
+    // Add wind indicator (always present in sandbox, controlled by setWind)
+    // Use viewport size (screen pixels) not world size
+    final screenSize = camera.viewport.size;
+    _windIndicator = WindIndicator(
+      position: Vector2.zero(),
+      size: screenSize,
+    );
+    camera.viewport.add(_windIndicator!);
 
     // Position beam in lower portion of screen
     const beamY = 10.0;
@@ -179,26 +194,40 @@ class SandboxGame extends Forge2DGame with TapCallbacks {
       if (_windGustTimer <= 0) {
         _isWindActive = false;
         _currentWindForce = 0;
+        _windIndicator?.setWind(0, false);
         // Set next gust interval
         _nextGustInterval = SandboxChallenges.windGustIntervalMin +
             _random.nextDouble() *
                 (SandboxChallenges.windGustIntervalMax - SandboxChallenges.windGustIntervalMin);
       }
+    } else if (_isWindWarning) {
+      // Warning phase - count down then start wind
+      _windWarningTimer -= dt;
+      if (_windWarningTimer <= 0) {
+        _isWindWarning = false;
+        _isWindActive = true;
+        _windGustTimer = SandboxChallenges.windGustDuration;
+        _currentWindForce = _pendingWindForce;
+        _windIndicator?.setWind(_currentWindForce, true);
+      }
     } else {
       // Wait for next gust
       _timeSinceLastGust += dt;
       if (_timeSinceLastGust >= _nextGustInterval) {
-        // Start a new gust
-        _isWindActive = true;
+        // Start warning phase
+        _isWindWarning = true;
         _timeSinceLastGust = 0;
-        _windGustTimer = SandboxChallenges.windGustDuration;
+        _windWarningTimer = SandboxChallenges.windWarningDuration;
 
-        // Random direction and force (scaled by windStrength)
-        final direction = _random.nextBool() ? 1.0 : -1.0;
+        // Pre-calculate direction and force for after warning
+        _pendingWindDirection = _random.nextBool() ? 1.0 : -1.0;
         final forceMagnitude = _challenges.windForceMin +
             _random.nextDouble() *
                 (_challenges.windForceMax - _challenges.windForceMin);
-        _currentWindForce = direction * forceMagnitude;
+        _pendingWindForce = _pendingWindDirection * forceMagnitude;
+
+        // Show warning indicator
+        _windIndicator?.setWarning(_pendingWindDirection);
       }
     }
   }

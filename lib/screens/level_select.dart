@@ -51,7 +51,7 @@ class LevelSelectScreen extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.star,
-                        color: GameColors.accent,
+                        color: GameColors.beam,
                         size: 20,
                       ),
                       const SizedBox(width: 4),
@@ -126,7 +126,7 @@ class _LevelTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isCompleted
-                ? GameColors.accent.withValues(alpha: 0.5)
+                ? GameColors.beam.withValues(alpha: 0.5)
                 : isUnlocked
                     ? GameColors.beam.withValues(alpha: 0.2)
                     : GameColors.beam.withValues(alpha: 0.05),
@@ -144,7 +144,7 @@ class _LevelTile extends StatelessWidget {
                   fontSize: 28,
                   fontWeight: FontWeight.w200,
                   color: isCompleted
-                      ? GameColors.accent
+                      ? GameColors.beam
                       : GameColors.beam.withValues(alpha: 0.8),
                 ),
               )
@@ -178,7 +178,7 @@ class _LevelTile extends StatelessWidget {
               Icon(
                 Icons.star,
                 size: 16,
-                color: GameColors.accent,
+                color: GameColors.beam,
               )
             else if (isUnlocked)
               Icon(

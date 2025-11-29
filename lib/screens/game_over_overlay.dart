@@ -64,7 +64,7 @@ class GameOverOverlay extends StatelessWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 4,
-                  color: GameColors.accent,
+                  color: GameColors.beam,
                 ),
               )
             else

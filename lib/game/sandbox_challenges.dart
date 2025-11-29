@@ -20,7 +20,7 @@ class SandboxChallenges {
   // Default values
   static const double defaultTiltStrength = 200.0;
   static const double defaultTiltSensitivity = 0.08;
-  static const double defaultBeamDamping = 0.0;
+  static const double defaultBeamDamping = 3.0; // Higher damping = less swinging
   static const double defaultGravity = 10.0;
   static const double defaultWindStrength = 1.0;
   static const double defaultBeamFriction = 0.8;
@@ -44,7 +44,8 @@ class SandboxChallenges {
   static const double windGustIntervalMax = 5.0;
   static const double baseWindForceMin = 15.0;
   static const double baseWindForceMax = 40.0;
-  static const double windGustDuration = 0.8;
+  static const double windGustDuration = 2.5;
+  static const double windWarningDuration = 2.0; // Warning before wind hits
 
   SandboxChallenges({
     this.tiltControl = false,

@@ -19,6 +19,7 @@ class ScaleBeam extends BodyComponent {
     final bodyDef = BodyDef(
       type: BodyType.dynamic,
       position: initialPosition,
+      angularDamping: GameConstants.beamAngularDamping,
     );
 
     final body = world.createBody(bodyDef);

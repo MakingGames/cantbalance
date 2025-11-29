@@ -22,19 +22,21 @@ class LevelCompleteOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: GameColors.background.withValues(alpha: 0.95),
-      child: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Star
-              Icon(
-                Icons.star,
-                size: 64,
-                color: GameColors.accent,
-              ),
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: GameColors.background.withValues(alpha: 0.95),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Star
+                Icon(
+                  Icons.star,
+                  size: 64,
+                  color: GameColors.beam,
+                ),
 
               const SizedBox(height: 24),
 
@@ -70,15 +72,15 @@ class LevelCompleteOverlay extends StatelessWidget {
                   fontSize: 20,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 3,
-                  color: GameColors.accent,
+                  color: GameColors.beam,
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // Score
+              // Height achieved
               Text(
-                '$score / ${level.targetShapes} shapes',
+                'Reached ${level.targetHeight.toStringAsFixed(0)} units',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w300,
@@ -121,6 +123,7 @@ class LevelCompleteOverlay extends StatelessWidget {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -142,82 +145,85 @@ class LevelFailedOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: GameColors.background.withValues(alpha: 0.95),
-      child: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // X icon
-              Icon(
-                Icons.close,
-                size: 64,
-                color: GameColors.danger,
-              ),
-
-              const SizedBox(height: 24),
-
-              // Level failed text
-              Text(
-                'LEVEL ${level.number}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w300,
-                  letterSpacing: 6,
-                  color: GameColors.beam.withValues(alpha: 0.6),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'FAILED',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w200,
-                  letterSpacing: 8,
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        color: GameColors.background.withValues(alpha: 0.95),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // X icon
+                Icon(
+                  Icons.close,
+                  size: 64,
                   color: GameColors.danger,
                 ),
-              ),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-              // Progress
-              Text(
-                '$score / ${level.targetShapes} shapes',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w300,
-                  color: GameColors.beam.withValues(alpha: 0.6),
+                // Level failed text
+                Text(
+                  'LEVEL ${level.number}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 6,
+                    color: GameColors.beam.withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 48),
+                const SizedBox(height: 8),
 
-              // Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Level select
-                  _ActionButton(
-                    label: 'LEVELS',
-                    icon: Icons.grid_view,
-                    onTap: onLevelSelect,
+                Text(
+                  'FAILED',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w200,
+                    letterSpacing: 8,
+                    color: GameColors.danger,
                   ),
+                ),
 
-                  const SizedBox(width: 16),
+                const SizedBox(height: 32),
 
-                  // Retry
-                  _ActionButton(
-                    label: 'RETRY',
-                    icon: Icons.refresh,
-                    onTap: onRetry,
-                    isPrimary: true,
+                // Target
+                Text(
+                  'Target: ${level.targetHeight.toStringAsFixed(0)} units',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300,
+                    color: GameColors.beam.withValues(alpha: 0.6),
                   ),
-                ],
-              ),
-            ],
+                ),
+
+                const SizedBox(height: 48),
+
+                // Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Level select
+                    _ActionButton(
+                      label: 'LEVELS',
+                      icon: Icons.grid_view,
+                      onTap: onLevelSelect,
+                    ),
+
+                    const SizedBox(width: 16),
+
+                    // Retry
+                    _ActionButton(
+                      label: 'RETRY',
+                      icon: Icons.refresh,
+                      onTap: onRetry,
+                      isPrimary: true,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -246,12 +252,12 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isPrimary
-              ? GameColors.accent.withValues(alpha: 0.2)
+              ? GameColors.beam.withValues(alpha: 0.2)
               : GameColors.beam.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isPrimary
-                ? GameColors.accent.withValues(alpha: 0.5)
+                ? GameColors.beam.withValues(alpha: 0.5)
                 : GameColors.beam.withValues(alpha: 0.2),
           ),
         ),
@@ -261,7 +267,7 @@ class _ActionButton extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: isPrimary ? GameColors.accent : GameColors.beam.withValues(alpha: 0.8),
+              color: isPrimary ? GameColors.beam : GameColors.beam.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 8),
             Text(
@@ -270,7 +276,7 @@ class _ActionButton extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 letterSpacing: 2,
-                color: isPrimary ? GameColors.accent : GameColors.beam.withValues(alpha: 0.8),
+                color: isPrimary ? GameColors.beam : GameColors.beam.withValues(alpha: 0.8),
               ),
             ),
           ],

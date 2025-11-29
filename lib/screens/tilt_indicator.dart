@@ -25,7 +25,7 @@ class TiltIndicator extends StatelessWidget {
       return GameColors.beam.withValues(alpha: 0.4);
     } else if (danger < 0.75) {
       // Warning zone: accent/gold
-      return GameColors.accent;
+      return GameColors.beam.withValues(alpha: 0.7);
     } else {
       // Danger zone: red
       return GameColors.danger;

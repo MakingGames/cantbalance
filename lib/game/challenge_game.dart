@@ -11,6 +11,7 @@ import '../components/scale_beam.dart';
 import '../components/square_shape.dart';
 import '../components/triangle_shape.dart';
 import '../components/walls.dart';
+import '../components/wind_indicator.dart';
 import 'constants.dart';
 import 'game_level.dart';
 import 'shape_size.dart';
@@ -24,6 +25,7 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   late ScaleBeam scaleBeam;
   late Fulcrum fulcrum;
   late Body anchorBody;
+  WindIndicator? _windIndicator;
 
   GhostShape? _ghostShape;
   double _beamY = 10.0;
@@ -94,6 +96,10 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
   double _currentWindForce = 0;
   double _windGustTimer = 0;
   bool _isWindActive = false;
+  bool _isWindWarning = false;
+  double _windWarningTimer = 0;
+  double _pendingWindDirection = 0;
+  double _pendingWindForce = 0;
 
   // Beam instability state (Level 6+)
   double _beamNudgeTimer = 0;
@@ -176,6 +182,15 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
 
     // Add invisible walls
     world.add(Walls(screenWidth: size.x, screenHeight: size.y));
+
+    // Add wind indicator (always present, controlled by setWind)
+    // Use viewport size (screen pixels) not world size
+    final screenSize = camera.viewport.size;
+    _windIndicator = WindIndicator(
+      position: Vector2.zero(),
+      size: screenSize,
+    );
+    add(_windIndicator!);
 
     // Position beam in lower portion of screen
     _beamY = 10.0;
@@ -339,26 +354,40 @@ class ChallengeGame extends Forge2DGame with DragCallbacks {
       if (_windGustTimer <= 0) {
         _isWindActive = false;
         _currentWindForce = 0;
+        _windIndicator?.setWind(0, false);
         // Set next gust interval
         _nextGustInterval = GameConstants.windGustIntervalMin +
             _random.nextDouble() *
                 (GameConstants.windGustIntervalMax - GameConstants.windGustIntervalMin);
       }
+    } else if (_isWindWarning) {
+      // Warning phase - count down then start wind
+      _windWarningTimer -= dt;
+      if (_windWarningTimer <= 0) {
+        _isWindWarning = false;
+        _isWindActive = true;
+        _windGustTimer = GameConstants.windGustDuration;
+        _currentWindForce = _pendingWindForce;
+        _windIndicator?.setWind(_currentWindForce, true);
+      }
     } else {
       // Wait for next gust
       _timeSinceLastGust += dt;
       if (_timeSinceLastGust >= _nextGustInterval) {
-        // Start a new gust
-        _isWindActive = true;
+        // Start warning phase
+        _isWindWarning = true;
         _timeSinceLastGust = 0;
-        _windGustTimer = GameConstants.windGustDuration;
+        _windWarningTimer = GameConstants.windWarningDuration;
 
-        // Random direction and force
-        final direction = _random.nextBool() ? 1.0 : -1.0;
+        // Pre-calculate direction and force for after warning
+        _pendingWindDirection = _random.nextBool() ? 1.0 : -1.0;
         final forceMagnitude = GameConstants.windForceMin +
             _random.nextDouble() *
                 (GameConstants.windForceMax - GameConstants.windForceMin);
-        _currentWindForce = direction * forceMagnitude;
+        _pendingWindForce = _pendingWindDirection * forceMagnitude;
+
+        // Show warning indicator
+        _windIndicator?.setWarning(_pendingWindDirection);
       }
     }
   }

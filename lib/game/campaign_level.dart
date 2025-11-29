@@ -1,9 +1,11 @@
+import 'sandbox_challenges.dart';
+
 /// Defines discrete campaign levels with specific win conditions
 class CampaignLevel {
   final int number;
   final String name;
   final String description;
-  final int targetShapes; // Win condition: place this many shapes
+  final double targetHeight; // Win condition: reach this height
 
   // Mechanics enabled for this level
   final bool hasAutoSpawn;
@@ -17,11 +19,24 @@ class CampaignLevel {
   final double spawnInterval;
   final double gravityY;
 
+  // Optional beam physics overrides (null = use global default)
+  final double? _beamDamping;
+  final double? _beamFriction;
+
+  /// Beam angular damping - uses level override or global default
+  double get beamDamping => _beamDamping ?? SandboxChallenges.defaultBeamDamping;
+
+  /// Beam friction - uses level override or global default
+  double get beamFriction => _beamFriction ?? SandboxChallenges.defaultBeamFriction;
+
+  /// All levels are now height-based
+  bool get isHeightBased => true;
+
   const CampaignLevel({
     required this.number,
     required this.name,
     required this.description,
-    required this.targetShapes,
+    required this.targetHeight,
     this.hasAutoSpawn = false,
     this.hasIncreasedGravity = false,
     this.hasWind = false,
@@ -30,7 +45,10 @@ class CampaignLevel {
     this.hasTimePressure = false,
     this.spawnInterval = 5.0,
     this.gravityY = 10.0,
-  });
+    double? beamDamping,
+    double? beamFriction,
+  })  : _beamDamping = beamDamping,
+        _beamFriction = beamFriction;
 
   /// All campaign levels
   static const List<CampaignLevel> all = [
@@ -122,36 +140,36 @@ class CampaignLevel {
   static const level1 = CampaignLevel(
     number: 1,
     name: 'First Steps',
-    description: 'Place 3 shapes on the beam',
-    targetShapes: 3,
+    description: 'Stack to 3 units high',
+    targetHeight: 3.0,
   );
 
   static const level2 = CampaignLevel(
     number: 2,
     name: 'Finding Balance',
-    description: 'Place 5 shapes',
-    targetShapes: 5,
+    description: 'Stack to 4 units high',
+    targetHeight: 4.0,
   );
 
   static const level3 = CampaignLevel(
     number: 3,
     name: 'Steady Hands',
-    description: 'Place 7 shapes',
-    targetShapes: 7,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
   );
 
   static const level4 = CampaignLevel(
     number: 4,
     name: 'Building Higher',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
   );
 
   static const level5 = CampaignLevel(
     number: 5,
     name: 'Balance Master',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
   );
 
   // ═══════════════════════════════════════════════════════════════════
@@ -161,8 +179,8 @@ class CampaignLevel {
   static const level6 = CampaignLevel(
     number: 6,
     name: 'First Rain',
-    description: 'Shapes begin to fall',
-    targetShapes: 5,
+    description: 'Stack to 4 units as shapes fall',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     spawnInterval: 8.0,
   );
@@ -170,8 +188,8 @@ class CampaignLevel {
   static const level7 = CampaignLevel(
     number: 7,
     name: 'Light Drizzle',
-    description: 'Place 7 shapes',
-    targetShapes: 7,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     spawnInterval: 6.0,
   );
@@ -179,8 +197,8 @@ class CampaignLevel {
   static const level8 = CampaignLevel(
     number: 8,
     name: 'Steady Rain',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     spawnInterval: 5.0,
   );
@@ -188,19 +206,19 @@ class CampaignLevel {
   static const level9 = CampaignLevel(
     number: 9,
     name: 'Downpour',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     spawnInterval: 4.0,
   );
 
   static const level10 = CampaignLevel(
     number: 10,
-    name: 'Torrential',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    name: 'Torrential Tower',
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
-    spawnInterval: 3.0,
+    spawnInterval: 4.0,
   );
 
   // ═══════════════════════════════════════════════════════════════════
@@ -210,8 +228,8 @@ class CampaignLevel {
   static const level11 = CampaignLevel(
     number: 11,
     name: 'Weighty Matters',
-    description: 'Gravity increases',
-    targetShapes: 6,
+    description: 'Stack to 4 units with heavy gravity',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     spawnInterval: 6.0,
@@ -221,8 +239,8 @@ class CampaignLevel {
   static const level12 = CampaignLevel(
     number: 12,
     name: 'Heavy Burden',
-    description: 'Place 8 shapes',
-    targetShapes: 8,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     spawnInterval: 5.0,
@@ -232,8 +250,8 @@ class CampaignLevel {
   static const level13 = CampaignLevel(
     number: 13,
     name: 'Crushing Weight',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     spawnInterval: 4.5,
@@ -243,8 +261,8 @@ class CampaignLevel {
   static const level14 = CampaignLevel(
     number: 14,
     name: 'Dense Atmosphere',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     spawnInterval: 4.0,
@@ -254,8 +272,8 @@ class CampaignLevel {
   static const level15 = CampaignLevel(
     number: 15,
     name: 'Jupiter\'s Pull',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     spawnInterval: 3.5,
@@ -269,8 +287,8 @@ class CampaignLevel {
   static const level16 = CampaignLevel(
     number: 16,
     name: 'Rolling In',
-    description: 'Circles and triangles appear',
-    targetShapes: 6,
+    description: 'Stack to 4 units with varied shapes',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     spawnInterval: 6.0,
@@ -279,8 +297,8 @@ class CampaignLevel {
   static const level17 = CampaignLevel(
     number: 17,
     name: 'Mixed Bag',
-    description: 'Place 8 shapes',
-    targetShapes: 8,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     spawnInterval: 5.0,
@@ -289,8 +307,8 @@ class CampaignLevel {
   static const level18 = CampaignLevel(
     number: 18,
     name: 'Shape Shifter',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     spawnInterval: 4.5,
@@ -299,8 +317,8 @@ class CampaignLevel {
   static const level19 = CampaignLevel(
     number: 19,
     name: 'Geometry Class',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     spawnInterval: 4.0,
@@ -309,8 +327,8 @@ class CampaignLevel {
   static const level20 = CampaignLevel(
     number: 20,
     name: 'Shape Master',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     spawnInterval: 3.5,
@@ -323,8 +341,8 @@ class CampaignLevel {
   static const level21 = CampaignLevel(
     number: 21,
     name: 'Light Breeze',
-    description: 'Wind gusts begin',
-    targetShapes: 6,
+    description: 'Stack to 4 units in the wind',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
@@ -334,8 +352,8 @@ class CampaignLevel {
   static const level22 = CampaignLevel(
     number: 22,
     name: 'Gusty Day',
-    description: 'Place 8 shapes',
-    targetShapes: 8,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
@@ -345,8 +363,8 @@ class CampaignLevel {
   static const level23 = CampaignLevel(
     number: 23,
     name: 'Strong Winds',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
@@ -356,8 +374,8 @@ class CampaignLevel {
   static const level24 = CampaignLevel(
     number: 24,
     name: 'Gale Force',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
@@ -367,8 +385,8 @@ class CampaignLevel {
   static const level25 = CampaignLevel(
     number: 25,
     name: 'Hurricane',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
@@ -382,56 +400,61 @@ class CampaignLevel {
   static const level26 = CampaignLevel(
     number: 26,
     name: 'Slippery Surface',
-    description: 'The beam becomes unstable',
-    targetShapes: 6,
+    description: 'Stack to 4 units on unstable beam',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasBeamInstability: true,
     spawnInterval: 6.0,
+    beamFriction: 0.3, // Slippery beam
   );
 
   static const level27 = CampaignLevel(
     number: 27,
     name: 'Shaky Ground',
-    description: 'Place 8 shapes',
-    targetShapes: 8,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasBeamInstability: true,
     spawnInterval: 5.0,
+    beamFriction: 0.3,
   );
 
   static const level28 = CampaignLevel(
     number: 28,
     name: 'Tremors',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasBeamInstability: true,
     spawnInterval: 4.5,
+    beamFriction: 0.25,
   );
 
   static const level29 = CampaignLevel(
     number: 29,
     name: 'Earthquake',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasBeamInstability: true,
     spawnInterval: 4.0,
+    beamFriction: 0.2,
   );
 
   static const level30 = CampaignLevel(
     number: 30,
     name: 'Fault Line',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasBeamInstability: true,
     spawnInterval: 3.5,
+    beamFriction: 0.2,
   );
 
   // ═══════════════════════════════════════════════════════════════════
@@ -441,8 +464,8 @@ class CampaignLevel {
   static const level31 = CampaignLevel(
     number: 31,
     name: 'Tick Tock',
-    description: 'Place shapes before time runs out',
-    targetShapes: 6,
+    description: 'Stack to 4 units before time runs out',
+    targetHeight: 4.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasTimePressure: true,
@@ -452,8 +475,8 @@ class CampaignLevel {
   static const level32 = CampaignLevel(
     number: 32,
     name: 'Racing Clock',
-    description: 'Place 8 shapes',
-    targetShapes: 8,
+    description: 'Stack to 5 units high',
+    targetHeight: 5.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasTimePressure: true,
@@ -463,8 +486,8 @@ class CampaignLevel {
   static const level33 = CampaignLevel(
     number: 33,
     name: 'Time Trial',
-    description: 'Place 10 shapes',
-    targetShapes: 10,
+    description: 'Stack to 6 units high',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasTimePressure: true,
@@ -474,8 +497,8 @@ class CampaignLevel {
   static const level34 = CampaignLevel(
     number: 34,
     name: 'Speed Run',
-    description: 'Place 12 shapes',
-    targetShapes: 12,
+    description: 'Stack to 7 units high',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasTimePressure: true,
@@ -485,8 +508,8 @@ class CampaignLevel {
   static const level35 = CampaignLevel(
     number: 35,
     name: 'Time Master',
-    description: 'Place 15 shapes',
-    targetShapes: 15,
+    description: 'Stack to 8 units high',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasTimePressure: true,
@@ -500,8 +523,8 @@ class CampaignLevel {
   static const level36 = CampaignLevel(
     number: 36,
     name: 'Heavy Storm',
-    description: 'Gravity + Wind',
-    targetShapes: 10,
+    description: 'Stack to 6 units with gravity + wind',
+    targetHeight: 6.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     hasShapeVariety: true,
@@ -513,20 +536,21 @@ class CampaignLevel {
   static const level37 = CampaignLevel(
     number: 37,
     name: 'Chaos Theory',
-    description: 'Wind + Instability',
-    targetShapes: 12,
+    description: 'Stack to 7 units with wind + instability',
+    targetHeight: 7.0,
     hasAutoSpawn: true,
     hasShapeVariety: true,
     hasWind: true,
     hasBeamInstability: true,
     spawnInterval: 4.0,
+    beamFriction: 0.3,
   );
 
   static const level38 = CampaignLevel(
     number: 38,
     name: 'Perfect Storm',
-    description: 'Gravity + Wind + Instability',
-    targetShapes: 15,
+    description: 'Stack to 8 units with all elements',
+    targetHeight: 8.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     hasShapeVariety: true,
@@ -534,13 +558,14 @@ class CampaignLevel {
     hasBeamInstability: true,
     spawnInterval: 3.5,
     gravityY: 14.0,
+    beamFriction: 0.25,
   );
 
   static const level39 = CampaignLevel(
     number: 39,
     name: 'Against All Odds',
-    description: 'Everything except time pressure',
-    targetShapes: 18,
+    description: 'Stack to 9 units high',
+    targetHeight: 9.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     hasShapeVariety: true,
@@ -548,13 +573,14 @@ class CampaignLevel {
     hasBeamInstability: true,
     spawnInterval: 3.0,
     gravityY: 15.0,
+    beamFriction: 0.2,
   );
 
   static const level40 = CampaignLevel(
     number: 40,
     name: 'The Final Balance',
-    description: 'Master all mechanics',
-    targetShapes: 20,
+    description: 'Stack to 10 units - master all mechanics',
+    targetHeight: 10.0,
     hasAutoSpawn: true,
     hasIncreasedGravity: true,
     hasShapeVariety: true,
@@ -563,5 +589,6 @@ class CampaignLevel {
     hasTimePressure: true,
     spawnInterval: 2.5,
     gravityY: 16.0,
+    beamFriction: 0.2,
   );
 }
